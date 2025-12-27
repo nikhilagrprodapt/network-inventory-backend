@@ -60,3 +60,6 @@ application-prod.properties
 # Optional: if you don't want to commit application.properties with credentials
 # src/main/resources/application.properties
 # src/main/resources/application.yml
+
+src/main/resources/application-local.properties
+
