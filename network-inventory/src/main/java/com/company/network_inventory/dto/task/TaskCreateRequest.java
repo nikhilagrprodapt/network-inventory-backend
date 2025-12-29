@@ -7,14 +7,14 @@ import lombok.Data;
 @Data
 public class TaskCreateRequest {
 
-    @NotNull
+    @NotNull(message = "Customer ID is required")
     private Long customerId;
 
-    @NotBlank
-    private String taskType; // "INSTALLATION"
-
-    private String notes;
-
-    // optional
     private Long technicianId;
+
+    @NotNull(message = "Task type is required")
+    private String taskType;
+
+    @NotBlank(message = "Notes cannot be empty")
+    private String notes;
 }

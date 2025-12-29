@@ -10,8 +10,10 @@ import com.company.network_inventory.exception.ResourceNotFoundException;
 import com.company.network_inventory.repository.AssetRepository;
 import com.company.network_inventory.repository.CustomerRepository;
 import com.company.network_inventory.service.AssetService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.company.network_inventory.audit.service.AuditService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +24,7 @@ public class AssetServiceImpl implements AssetService {
 
     private final AssetRepository assetRepository;
     private final CustomerRepository customerRepository;
+    private final AuditService auditService;
 
     @Override
     public AssetResponse createAsset(AssetCreateRequest request) {
@@ -33,9 +36,19 @@ public class AssetServiceImpl implements AssetService {
                 .status(request.getStatus())
                 .build();
 
-        return toResponse(assetRepository.save(asset));
+        Asset saved = assetRepository.save(asset);
+
+        auditService.log(
+                "CREATE",
+                "ASSET",
+                saved.getAssetId(),
+                "Created asset type=" + saved.getType() +
+                        ", serial=" + saved.getSerialNumber()
+        );
+        return toResponse(saved);
     }
 
+    @Transactional
     @Override
     public AssetResponse assignAsset(Long assetId, AssetAssignRequest request) {
 
@@ -49,7 +62,15 @@ public class AssetServiceImpl implements AssetService {
         asset.setAssignedAt(LocalDateTime.now());
         asset.setStatus(AssetStatus.ASSIGNED);
 
-        return toResponse(assetRepository.save(asset));
+        Asset saved = assetRepository.save(asset);
+
+        auditService.log(
+                "ASSIGN",
+                "ASSET",
+                saved.getAssetId(),
+                "Assigned asset to customerId=" + customer.getCustomerId()
+        );
+        return toResponse(saved);
     }
 
     @Override

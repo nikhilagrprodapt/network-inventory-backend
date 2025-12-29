@@ -8,18 +8,20 @@ import lombok.Data;
 @Data
 public class CustomerCreateRequest {
 
-    @NotBlank
+    @NotBlank(message = "Customer name is required")
     private String name;
 
-    @NotBlank
+    @NotBlank(message = "Address is required")
     private String address;
 
+    @NotBlank(message = "Neighborhood is required")
     private String neighborhood;
+
+    @NotBlank(message = "Plan is required")
     private String plan;
 
-    @NotNull
+    @NotNull(message = "Status is required")
     private CustomerStatus status;
-
     // optional at onboarding time
     private Long splitterId;
     private Integer splitterPort;

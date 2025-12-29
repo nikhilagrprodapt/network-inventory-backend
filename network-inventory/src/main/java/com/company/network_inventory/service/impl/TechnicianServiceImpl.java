@@ -7,6 +7,8 @@ import com.company.network_inventory.repository.TechnicianRepository;
 import com.company.network_inventory.service.TechnicianService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.company.network_inventory.audit.service.AuditService;
+
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class TechnicianServiceImpl implements TechnicianService {
 
     private final TechnicianRepository technicianRepository;
+    private final AuditService auditService;
 
     @Override
     public TechnicianResponse create(TechnicianCreateRequest request) {
@@ -26,6 +29,15 @@ public class TechnicianServiceImpl implements TechnicianService {
                 .build();
 
         Technician saved = technicianRepository.save(tech);
+//        Technician saved = technicianRepository.save(technician);
+
+        auditService.log(
+                "CREATE",
+                "TECHNICIAN",
+                saved.getTechnicianId(),
+                "Created technician name=" + saved.getName()
+        );
+
 
         return TechnicianResponse.builder()
                 .technicianId(saved.getTechnicianId())

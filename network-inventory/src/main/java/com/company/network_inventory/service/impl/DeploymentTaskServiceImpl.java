@@ -13,8 +13,11 @@ import com.company.network_inventory.repository.CustomerRepository;
 import com.company.network_inventory.repository.DeploymentTaskRepository;
 import com.company.network_inventory.repository.TechnicianRepository;
 import com.company.network_inventory.service.DeploymentTaskService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.company.network_inventory.audit.service.AuditService;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +29,8 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     private final DeploymentTaskRepository deploymentTaskRepository;
     private final CustomerRepository customerRepository;
     private final TechnicianRepository technicianRepository;
+    private final AuditService auditService;
+
 
     @Override
     public TaskResponse create(TaskCreateRequest request) {
@@ -48,9 +53,30 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .notes(request.getNotes())
                 .build();
 
-        return toResponse(deploymentTaskRepository.save(task));
+        DeploymentTask saved = deploymentTaskRepository.save(task);
+
+// AUDIT: Task created
+        auditService.log(
+                "CREATE",
+                "TASK",
+                saved.getTaskId(),
+                "Created task type=" + saved.getTaskType() +
+                        ", customerId=" + saved.getCustomer().getCustomerId()
+        );
+
+// AUDIT: Technician assigned (ONLY if technician exists)
+        if (saved.getTechnician() != null) {
+            auditService.log(
+                    "ASSIGN",
+                    "TASK",
+                    saved.getTaskId(),
+                    "Assigned technicianId=" + saved.getTechnician().getTechnicianId()
+            );
+        }
+        return toResponse(saved);
     }
 
+    @Transactional
     @Override
     public TaskResponse updateStatus(Long taskId, TaskStatusUpdateRequest request) {
 
@@ -78,8 +104,14 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 customerRepository.save(customer);
             }
         }
-
-        return toResponse(deploymentTaskRepository.save(task));
+        DeploymentTask saved = deploymentTaskRepository.save(task);
+        auditService.log(
+                "STATUS_CHANGE",
+                "TASK",
+                saved.getTaskId(),
+                "Task status changed to " + saved.getStatus()
+        );
+        return toResponse(saved);
     }
 
     @Override

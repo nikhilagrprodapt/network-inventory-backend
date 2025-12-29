@@ -61,5 +61,5 @@ application-prod.properties
 # src/main/resources/application.properties
 # src/main/resources/application.yml
 
+# Local profile secrets
 src/main/resources/application-local.properties
-

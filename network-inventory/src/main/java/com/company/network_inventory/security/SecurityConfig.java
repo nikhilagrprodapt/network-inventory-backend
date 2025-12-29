@@ -13,13 +13,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults()) // ✅ enable CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/health").permitAll()  // allow health check
-                        .anyRequest().permitAll()                   // for now allow everything
-                )
-                .httpBasic(Customizer.withDefaults());          // no form login
+                        .requestMatchers("/api/health").permitAll()
+                        .anyRequest().permitAll()
+                );
 
         return http.build();
     }
 }
-

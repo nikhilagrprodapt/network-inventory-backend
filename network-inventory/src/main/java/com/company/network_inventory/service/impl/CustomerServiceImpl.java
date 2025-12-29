@@ -10,7 +10,10 @@ import com.company.network_inventory.repository.SplitterRepository;
 import com.company.network_inventory.service.CustomerService;
 import com.company.network_inventory.dto.CustomerAssignSplitterRequest;
 import com.company.network_inventory.entity.enums.CustomerStatus;
+import com.company.network_inventory.audit.service.AuditService;
 
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
+    @Transactional
     @Override
     public CustomerResponse assignSplitter(Long customerId, CustomerAssignSplitterRequest request) {
 
@@ -54,12 +58,19 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Customer saved = customerRepository.save(customer);
+
+        auditService.log(
+                "ASSIGN",
+                "CUSTOMER",
+                saved.getCustomerId(),
+                "Assigned splitterId=" + splitter.getSplitterId() + ", port=" + port
+        );
         return toResponse(saved);
     }
 
-
     private final CustomerRepository customerRepository;
     private final SplitterRepository splitterRepository;
+    private final AuditService auditService;
 
     @Override
     public CustomerResponse createCustomer(CustomerCreateRequest request) {
@@ -82,7 +93,15 @@ public class CustomerServiceImpl implements CustomerService {
                 .build();
 
         Customer saved = customerRepository.save(customer);
+        auditService.log(
+                "CREATE",
+                "CUSTOMER",
+                saved.getCustomerId(),
+                "Created customer name=" + saved.getName() + ", neighborhood=" + saved.getNeighborhood()
+        );
+
         return toResponse(saved);
+
     }
 
     @Override
@@ -99,10 +118,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void deleteCustomer(Long customerId) {
-        if (!customerRepository.existsById(customerId)) {
-            throw new ResourceNotFoundException("Customer not found: " + customerId);
-        }
-        customerRepository.deleteById(customerId);
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+        customerRepository.delete(customer);
+        auditService.log(
+                "DELETE",
+                "CUSTOMER",
+                customerId,
+                "Deleted customer name=" + customer.getName()
+        );
     }
 
     private CustomerResponse toResponse(Customer c) {
