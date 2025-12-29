@@ -4,9 +4,11 @@ import com.company.network_inventory.dto.AssetAssignRequest;
 import com.company.network_inventory.dto.AssetCreateRequest;
 import com.company.network_inventory.dto.AssetResponse;
 import com.company.network_inventory.entity.Asset;
+import com.company.network_inventory.entity.AssetAssignment;
 import com.company.network_inventory.entity.Customer;
 import com.company.network_inventory.entity.enums.AssetStatus;
 import com.company.network_inventory.exception.ResourceNotFoundException;
+import com.company.network_inventory.repository.AssetAssignmentRepository;
 import com.company.network_inventory.repository.AssetRepository;
 import com.company.network_inventory.repository.CustomerRepository;
 import com.company.network_inventory.service.AssetService;
@@ -25,6 +27,8 @@ public class AssetServiceImpl implements AssetService {
     private final AssetRepository assetRepository;
     private final CustomerRepository customerRepository;
     private final AuditService auditService;
+    private final AssetAssignmentRepository assetAssignmentRepository;
+
 
     @Override
     public AssetResponse createAsset(AssetCreateRequest request) {
@@ -57,6 +61,19 @@ public class AssetServiceImpl implements AssetService {
 
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+
+        assetAssignmentRepository.findFirstByAsset_AssetIdAndUnassignedAtIsNullOrderByAssignedAtDesc(assetId)
+                .ifPresent(active -> {
+                    active.setUnassignedAt(LocalDateTime.now());
+                    assetAssignmentRepository.save(active);
+                });
+
+        AssetAssignment assignment = AssetAssignment.builder()
+                .asset(asset)
+                .customer(customer)
+                .build();
+
+        assetAssignmentRepository.save(assignment);
 
         asset.setAssignedToCustomer(customer);
         asset.setAssignedAt(LocalDateTime.now());

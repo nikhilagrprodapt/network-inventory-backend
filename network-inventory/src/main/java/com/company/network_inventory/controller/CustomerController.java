@@ -2,6 +2,7 @@ package com.company.network_inventory.controller;
 
 import com.company.network_inventory.dto.CustomerCreateRequest;
 import com.company.network_inventory.dto.CustomerResponse;
+import com.company.network_inventory.dto.CustomerUpdateRequest;
 import com.company.network_inventory.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,11 @@ public class CustomerController {
     @PostMapping
     public CustomerResponse create(@Valid @RequestBody CustomerCreateRequest request) {
         return customerService.createCustomer(request);
+    }
+
+    @PatchMapping("/{id}")
+    public CustomerResponse update(@PathVariable Long id,@Valid @RequestBody CustomerUpdateRequest request) {
+        return customerService.updateCustomer(id, request);
     }
 
     @PutMapping("/{id}/assign-splitter")

@@ -5,6 +5,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import com.company.network_inventory.entity.enums.ConnectionType;
+import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
+
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -25,6 +31,17 @@ public class Customer {
     private String plan;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "connection_type")
+    private ConnectionType connectionType;
+
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerStatus status;
 
@@ -34,5 +51,4 @@ public class Customer {
 
     private Integer splitterPort;
 
-    private LocalDateTime createdAt;
 }

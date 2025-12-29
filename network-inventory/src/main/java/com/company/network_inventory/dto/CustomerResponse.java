@@ -1,5 +1,6 @@
 package com.company.network_inventory.dto;
 
+import com.company.network_inventory.entity.enums.ConnectionType;
 import com.company.network_inventory.entity.enums.CustomerStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,7 @@ public class CustomerResponse {
     private String address;
     private String neighborhood;
     private String plan;
+    private ConnectionType connectionType;
     private CustomerStatus status;
 
     private Long splitterId;
