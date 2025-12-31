@@ -1,10 +1,7 @@
 package com.company.network_inventory.controller;
 
 import com.company.network_inventory.entity.CoreSwitch;
-import com.company.network_inventory.entity.Headend;
-import com.company.network_inventory.exception.ResourceNotFoundException;
-import com.company.network_inventory.repository.CoreSwitchRepository;
-import com.company.network_inventory.repository.HeadendRepository;
+import com.company.network_inventory.service.CoreSwitchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,21 +12,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CoreSwitchController {
 
-    private final CoreSwitchRepository coreSwitchRepository;
-    private final HeadendRepository headendRepository;
+    private final CoreSwitchService coreSwitchService;
 
     @PostMapping
     public CoreSwitch create(@RequestBody CoreSwitch request) {
-        if (request.getHeadend() != null && request.getHeadend().getHeadendId() != null) {
-            Headend headend = headendRepository.findById(request.getHeadend().getHeadendId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Headend not found"));
-            request.setHeadend(headend);
-        }
-        return coreSwitchRepository.save(request);
+        return coreSwitchService.create(request);
     }
 
     @GetMapping
     public List<CoreSwitch> all() {
-        return coreSwitchRepository.findAll();
+        return coreSwitchService.getAll();
     }
 }

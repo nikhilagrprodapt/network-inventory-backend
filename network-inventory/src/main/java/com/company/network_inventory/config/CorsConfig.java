@@ -17,7 +17,10 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // React dev server (later)
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173", // Vite
+                "http://localhost:3000"  // if you ever use CRA later
+        ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
