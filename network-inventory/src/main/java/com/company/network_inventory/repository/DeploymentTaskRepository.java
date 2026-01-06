@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DeploymentTaskRepository extends JpaRepository<DeploymentTask, Long> {
-
-    List<DeploymentTask> findByCustomer_CustomerId(Long customerId);
-
-    List<DeploymentTask> findByTechnician_TechnicianId(Long technicianId);
+    List<DeploymentTask> findByCustomerCustomerId(Long customerId);
+    List<DeploymentTask> findByTechnicianTechnicianId(Long technicianId);
 }

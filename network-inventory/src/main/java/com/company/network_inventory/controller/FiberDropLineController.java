@@ -1,7 +1,9 @@
 package com.company.network_inventory.controller;
 
-import com.company.network_inventory.entity.FiberDropLine;
+import com.company.network_inventory.dto.FiberDropLineCreateRequest;
+import com.company.network_inventory.dto.FiberDropLineResponse;
 import com.company.network_inventory.service.FiberDropLineService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +17,12 @@ public class FiberDropLineController {
     private final FiberDropLineService fiberDropLineService;
 
     @PostMapping
-    public FiberDropLine create(@RequestBody FiberDropLine request) {
+    public FiberDropLineResponse create(@Valid @RequestBody FiberDropLineCreateRequest request) {
         return fiberDropLineService.create(request);
     }
 
     @GetMapping
-    public List<FiberDropLine> all() {
+    public List<FiberDropLineResponse> all() {
         return fiberDropLineService.getAll();
     }
 }

@@ -12,9 +12,8 @@ public class TaskCreateRequest {
 
     private Long technicianId;
 
-    @NotNull(message = "Task type is required")
+    @NotBlank(message = "Task type is required")
     private String taskType;
 
-    @NotBlank(message = "Notes cannot be empty")
     private String notes;
 }

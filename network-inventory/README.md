@@ -1,34 +1,22 @@
-# Network Inventory Backend (Spring Boot + MySQL)
+# Network Inventory Management System
 
 ## Tech Stack
-- Java + Spring Boot
-- Spring Data JPA (Hibernate)
-- MySQL
-- Swagger OpenAPI
-- Audit Logging (actor + requestId)
+- Backend: Spring Boot, JPA, MySQL
+- Frontend: React (Vite)
+- Database: MySQL
+- Security: Spring Security (basic)
+- API Docs: Swagger
 
-## How to Run (Local)
-1. Create MySQL DB: `network_inventory_db`
-2. Create `src/main/resources/application-local.properties` with your DB credentials
-3. Run with profile:
-    - IntelliJ: set active profile = `local`
-    - or: `mvn spring-boot:run -Dspring-boot.run.profiles=local`
+## Features
+- Customer management
+- Network topology (Headend → FDH → Splitter → Customer)
+- Asset inventory & assignment
+- Technician & task management
+- Audit logging
+- Real-time dashboard metrics
 
-## Swagger
-- http://localhost:8989/swagger-ui/index.html
-- http://localhost:8989/v3/api-docs
+## How to Run
 
-## Key Features
-- Manage Headend → FDH → Splitters → Customers
-- Splitter port assignment with validation
-- Deployment Task workflow (SCHEDULED → IN_PROGRESS → COMPLETED)
-- Technician management
-- Asset creation + assignment to customer
-- Audit logs for CREATE/ASSIGN/STATUS_CHANGE actions
-
-## Audit Logs
-Endpoint:
-- `GET /api/audit/recent`
-
-Header used:
-- `X-Actor: Admin`
+### Backend
+```bash
+mvn spring-boot:run

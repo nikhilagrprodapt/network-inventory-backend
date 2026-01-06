@@ -1,9 +1,9 @@
 package com.company.network_inventory.service.impl;
 
-import com.company.network_inventory.audit.service.AuditService;
+import com.company.network_inventory.dto.CoreSwitchCreateRequest;
+import com.company.network_inventory.dto.CoreSwitchResponse;
 import com.company.network_inventory.entity.CoreSwitch;
 import com.company.network_inventory.entity.Headend;
-import com.company.network_inventory.exception.ResourceNotFoundException;
 import com.company.network_inventory.repository.CoreSwitchRepository;
 import com.company.network_inventory.repository.HeadendRepository;
 import com.company.network_inventory.service.CoreSwitchService;
@@ -18,30 +18,37 @@ public class CoreSwitchServiceImpl implements CoreSwitchService {
 
     private final CoreSwitchRepository coreSwitchRepository;
     private final HeadendRepository headendRepository;
-    private final AuditService auditService;
 
     @Override
-    public CoreSwitch create(CoreSwitch request) {
-        if (request.getHeadend() != null && request.getHeadend().getHeadendId() != null) {
-            Headend headend = headendRepository.findById(request.getHeadend().getHeadendId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Headend not found: " + request.getHeadend().getHeadendId()));
-            request.setHeadend(headend);
-        }
+    public CoreSwitchResponse create(CoreSwitchCreateRequest request) {
+        Headend headend = headendRepository.findById(request.getHeadendId())
+                .orElseThrow(() -> new RuntimeException("Headend not found: " + request.getHeadendId()));
 
-        CoreSwitch saved = coreSwitchRepository.save(request);
+        CoreSwitch cs = CoreSwitch.builder()
+                .name(request.getName())
+                .location(request.getLocation())
+                .headend(headend)
+                .build();
 
-        auditService.log(
-                "CREATE",
-                "CORE_SWITCH",
-                saved.getCoreSwitchId(), // make sure getter exists in entity
-                "Created core switch name=" + saved.getName()
-        );
+        CoreSwitch saved = coreSwitchRepository.save(cs);
 
-        return saved;
+        return CoreSwitchResponse.builder()
+                .coreSwitchId(saved.getCoreSwitchId())
+                .name(saved.getName())
+                .location(saved.getLocation())
+                .headendId(saved.getHeadend().getHeadendId())
+                .build();
     }
 
     @Override
-    public List<CoreSwitch> getAll() {
-        return coreSwitchRepository.findAll();
+    public List<CoreSwitchResponse> getAll() {
+        return coreSwitchRepository.findAll().stream()
+                .map(cs -> CoreSwitchResponse.builder()
+                        .coreSwitchId(cs.getCoreSwitchId())
+                        .name(cs.getName())
+                        .location(cs.getLocation())
+                        .headendId(cs.getHeadend() != null ? cs.getHeadend().getHeadendId() : null)
+                        .build())
+                .toList();
     }
 }

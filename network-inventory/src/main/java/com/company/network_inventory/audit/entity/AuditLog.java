@@ -2,6 +2,7 @@ package com.company.network_inventory.audit.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -16,15 +17,23 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String actor;         // who triggered it (from X-Actor or SYSTEM)
-    private String action;        // CREATE, UPDATE, DELETE, ASSIGN, STATUS_CHANGE
-    private String entityType;    // CUSTOMER, SPLITTER, TASK, ASSET, etc.
-    private Long entityId;        // id of that entity
+    @Column(nullable = false)
+    private String actor; // who triggered it (from X-Actor or SYSTEM)
+
+    @Column(nullable = false)
+    private String action; // CREATE, UPDATE, DELETE, ASSIGN, STATUS_CHANGE
+
+    @Column(nullable = false)
+    private String entityType; // CUSTOMER, SPLITTER, TASK, ASSET, etc.
+
+    private Long entityId;
 
     @Column(length = 2000)
-    private String details;       // extra info
+    private String details;
 
-    private String requestId;     // tracking id for that request
+    private String requestId;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

@@ -1,7 +1,9 @@
 package com.company.network_inventory.controller;
 
-import com.company.network_inventory.entity.CoreSwitch;
+import com.company.network_inventory.dto.CoreSwitchCreateRequest;
+import com.company.network_inventory.dto.CoreSwitchResponse;
 import com.company.network_inventory.service.CoreSwitchService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +17,12 @@ public class CoreSwitchController {
     private final CoreSwitchService coreSwitchService;
 
     @PostMapping
-    public CoreSwitch create(@RequestBody CoreSwitch request) {
+    public CoreSwitchResponse create(@Valid @RequestBody CoreSwitchCreateRequest request) {
         return coreSwitchService.create(request);
     }
 
     @GetMapping
-    public List<CoreSwitch> all() {
+    public List<CoreSwitchResponse> all() {
         return coreSwitchService.getAll();
     }
 }

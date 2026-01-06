@@ -1,4 +1,4 @@
-package com.company.network_inventory.dto.task;
+package com.company.network_inventory.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +8,7 @@ import lombok.Data;
 public class TechnicianResponse {
     private Long technicianId;
     private String name;
-    private String contact;
-    private String region;
+    private String phone;
+    private String email;
+    private String status;
 }

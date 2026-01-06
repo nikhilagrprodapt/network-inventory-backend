@@ -1,10 +1,10 @@
 package com.company.network_inventory.service.impl;
 
-import com.company.network_inventory.audit.service.AuditService;
+import com.company.network_inventory.dto.FiberDropLineCreateRequest;
+import com.company.network_inventory.dto.FiberDropLineResponse;
 import com.company.network_inventory.entity.Customer;
 import com.company.network_inventory.entity.FiberDropLine;
 import com.company.network_inventory.entity.Splitter;
-import com.company.network_inventory.exception.ResourceNotFoundException;
 import com.company.network_inventory.repository.CustomerRepository;
 import com.company.network_inventory.repository.FiberDropLineRepository;
 import com.company.network_inventory.repository.SplitterRepository;
@@ -21,41 +21,56 @@ public class FiberDropLineServiceImpl implements FiberDropLineService {
     private final FiberDropLineRepository fiberDropLineRepository;
     private final SplitterRepository splitterRepository;
     private final CustomerRepository customerRepository;
-    private final AuditService auditService;
 
     @Override
-    public FiberDropLine create(FiberDropLine request) {
+    public FiberDropLineResponse create(FiberDropLineCreateRequest req) {
 
-        if (request.getFromSplitter() == null || request.getFromSplitter().getSplitterId() == null) {
-            throw new IllegalArgumentException("fromSplitter.splitterId is required");
-        }
-        if (request.getToCustomer() == null || request.getToCustomer().getCustomerId() == null) {
-            throw new IllegalArgumentException("toCustomer.customerId is required");
-        }
+        Splitter splitter = splitterRepository.findById(req.getFromSplitterId())
+                .orElseThrow(() -> new RuntimeException("Splitter not found: " + req.getFromSplitterId()));
 
-        Splitter splitter = splitterRepository.findById(request.getFromSplitter().getSplitterId())
-                .orElseThrow(() -> new ResourceNotFoundException("Splitter not found: " + request.getFromSplitter().getSplitterId()));
+        Customer customer = customerRepository.findById(req.getToCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + req.getToCustomerId()));
 
-        Customer customer = customerRepository.findById(request.getToCustomer().getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + request.getToCustomer().getCustomerId()));
+        FiberDropLine line = FiberDropLine.builder()
+                .fromSplitter(splitter)
+                .toCustomer(customer)
+                .lengthMeters(req.getLengthMeters())
+                .status(req.getStatus())
+                .build();
 
-        request.setFromSplitter(splitter);
-        request.setToCustomer(customer);
+        FiberDropLine saved = fiberDropLineRepository.save(line);
 
-        FiberDropLine saved = fiberDropLineRepository.save(request);
-
-        auditService.log(
-                "CREATE",
-                "FIBER_DROP_LINE",
-                saved.getLineId(), // make sure getter exists in entity
-                "Created fiber line from splitterId=" + splitter.getSplitterId() + " to customerId=" + customer.getCustomerId()
-        );
-
-        return saved;
+        return toResponse(saved);
     }
 
     @Override
-    public List<FiberDropLine> getAll() {
-        return fiberDropLineRepository.findAll();
+    public FiberDropLine create(FiberDropLine request) {
+        return fiberDropLineRepository.save(request);
+    }
+
+    @Override
+    public List<FiberDropLineResponse> getAll() {
+        // If your relationships are LAZY, this still works because we are inside service transaction scope
+        // If you ever get LazyInitializationException, I’ll give you the @EntityGraph fix.
+        return fiberDropLineRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private FiberDropLineResponse toResponse(FiberDropLine l) {
+        var s = l.getFromSplitter();
+        var c = l.getToCustomer();
+
+        return FiberDropLineResponse.builder()
+                .lineId(l.getLineId())
+                .fromSplitterId(s != null ? s.getSplitterId() : null)
+                .fromSplitterName(s != null ? s.getName() : null)
+                .fromSplitterModel(s != null ? s.getModel() : null)
+                .toCustomerId(c != null ? c.getCustomerId() : null)
+                .toCustomerName(c != null ? c.getName() : null)
+                .toCustomerStatus(c != null && c.getStatus() != null ? c.getStatus().name() : null)
+                .lengthMeters(l.getLengthMeters())
+                .status(l.getStatus())
+                .build();
     }
 }

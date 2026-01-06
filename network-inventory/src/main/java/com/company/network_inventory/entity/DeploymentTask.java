@@ -7,7 +7,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
 public class DeploymentTask {
 
     @Id
@@ -15,7 +17,7 @@ public class DeploymentTask {
     private Long taskId;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
     @ManyToOne
@@ -23,7 +25,7 @@ public class DeploymentTask {
     private Technician technician;
 
     @Column(nullable = false)
-    private String taskType;   // e.g., "INSTALLATION", "TROUBLESHOOTING"
+    private String taskType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -4,7 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "technician")
 public class Technician {
 
     @Id
@@ -14,7 +19,10 @@ public class Technician {
     @Column(nullable = false)
     private String name;
 
-    private String contact;
+    private String phone;
 
-    private String region;
+    private String email;
+
+    @Column(nullable = false)
+    private String status; // ACTIVE, INACTIVE
 }
