@@ -30,12 +30,20 @@ public class DeploymentTaskController {
     }
 
     @PatchMapping("/{taskId}/assign")
-    public ApiResponse<TaskResponse> assign(@PathVariable Long taskId, @Valid @RequestBody TaskAssignRequest request) {
+    public ApiResponse<TaskResponse> assign(@PathVariable Long taskId,
+                                            @Valid @RequestBody TaskAssignRequest request) {
         return ApiResponse.ok("Technician assigned", deploymentTaskService.assignTechnician(taskId, request));
     }
 
     @PatchMapping("/{taskId}/status")
-    public ApiResponse<TaskResponse> updateStatus(@PathVariable Long taskId, @Valid @RequestBody TaskStatusUpdateRequest request) {
+    public ApiResponse<TaskResponse> updateStatus(@PathVariable Long taskId,
+                                                  @Valid @RequestBody TaskStatusUpdateRequest request) {
         return ApiResponse.ok("Task status updated", deploymentTaskService.updateStatus(taskId, request));
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ApiResponse<Void> delete(@PathVariable Long taskId) {
+        deploymentTaskService.delete(taskId);
+        return ApiResponse.ok("Task deleted", null);
     }
 }

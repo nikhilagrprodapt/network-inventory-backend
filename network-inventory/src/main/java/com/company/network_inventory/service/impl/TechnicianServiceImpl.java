@@ -63,7 +63,7 @@ public class TechnicianServiceImpl implements TechnicianService {
                 .toList();
     }
 
-    @Override
+
     @Transactional(readOnly = true)
     public TechnicianResponse getOne(Long id) {
         Technician t = technicianRepository.findById(id)

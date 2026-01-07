@@ -3,6 +3,7 @@ package com.company.network_inventory.controller;
 import com.company.network_inventory.dto.AssetAssignRequest;
 import com.company.network_inventory.dto.AssetCreateRequest;
 import com.company.network_inventory.dto.AssetResponse;
+import com.company.network_inventory.entity.AssetAssignment;
 import com.company.network_inventory.service.AssetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,22 @@ public class AssetController {
     }
 
     @GetMapping
-    public List<AssetResponse> getAll() {
-        return assetService.getAllAssets();
+    public List<AssetResponse> all(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status
+    ) {
+        return assetService.getAssetsByFilter(type, status);
     }
+
+    @PutMapping("/{id}/unassign")
+    public AssetResponse unassign(@PathVariable Long id) {
+        return assetService.unassignAsset(id);
+    }
+
+    @GetMapping("/{id}/history")
+    public List<AssetAssignment> history(@PathVariable Long id) {
+        return assetService.getAssetHistory(id);
+    }
+
 }
 

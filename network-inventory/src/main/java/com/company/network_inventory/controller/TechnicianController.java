@@ -25,20 +25,17 @@ public class TechnicianController {
         return technicianService.getAll();
     }
 
-    @GetMapping("/{id}")
-    public TechnicianResponse getOne(@PathVariable Long id) {
-        return technicianService.getOne(id);
-    }
-
-    // PATCH update fields (name/phone/email/status)
     @PatchMapping("/{id}")
-    public TechnicianResponse update(@PathVariable Long id, @RequestBody TechnicianUpdateRequest request) {
+    public TechnicianResponse update(@PathVariable Long id,
+                                     @Valid @RequestBody TechnicianUpdateRequest request) {
         return technicianService.update(id, request);
     }
 
-    // PATCH status only
     @PatchMapping("/{id}/status")
-    public TechnicianResponse updateStatus(@PathVariable Long id, @Valid @RequestBody TechnicianStatusRequest request) {
+    public TechnicianResponse updateStatus(@PathVariable Long id,
+                                           @Valid @RequestBody TechnicianStatusRequest request) {
         return technicianService.updateStatus(id, request);
     }
+
+
 }

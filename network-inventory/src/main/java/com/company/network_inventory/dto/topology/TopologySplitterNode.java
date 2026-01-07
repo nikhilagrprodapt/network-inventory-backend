@@ -12,5 +12,10 @@ public class TopologySplitterNode {
     private String name;
     private String model;
     private Integer portCapacity;
+
+    // Existing (kept for backward compatibility)
     private List<TopologyCustomerNode> customers;
+
+    // NEW: Splitter -> FiberDropLine -> Customer
+    private List<TopologyFiberDropLineNode> fiberDropLines;
 }

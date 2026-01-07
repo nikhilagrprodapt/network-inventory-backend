@@ -19,6 +19,7 @@ import com.company.network_inventory.audit.service.AuditService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -93,6 +94,81 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public List<AssetResponse> getAllAssets() {
         return assetRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+
+    @Override
+    public List<AssetResponse> getAssetsByFilter(String type, String status) {
+
+        com.company.network_inventory.entity.enums.AssetType t = null;
+        com.company.network_inventory.entity.enums.AssetStatus s = null;
+
+        try {
+            if (type != null && !type.isBlank()) {
+                t = com.company.network_inventory.entity.enums.AssetType
+                        .valueOf(type.trim().toUpperCase(Locale.ROOT));
+            }
+        } catch (Exception ignored) {
+            t = null;
+        }
+
+        try {
+            if (status != null && !status.isBlank()) {
+                s = com.company.network_inventory.entity.enums.AssetStatus
+                        .valueOf(status.trim().toUpperCase(Locale.ROOT));
+            }
+        } catch (Exception ignored) {
+            s = null;
+        }
+
+        if (t != null && s != null) {
+            return assetRepository.findByTypeAndStatus(t, s).stream().map(this::toResponse).toList();
+        }
+        if (t != null) {
+            return assetRepository.findByType(t).stream().map(this::toResponse).toList();
+        }
+        if (s != null) {
+            return assetRepository.findByStatus(s).stream().map(this::toResponse).toList();
+        }
+
+        return getAllAssets();
+    }
+
+
+    @Transactional
+    @Override
+    public AssetResponse unassignAsset(Long assetId) {
+        Asset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + assetId));
+
+        AssetAssignment active = assetAssignmentRepository
+                .findFirstByAsset_AssetIdAndUnassignedAtIsNullOrderByAssignedAtDesc(assetId)
+                .orElseThrow(() -> new IllegalArgumentException("Asset is not currently assigned"));
+
+        active.setUnassignedAt(LocalDateTime.now());
+        assetAssignmentRepository.save(active);
+
+        asset.setAssignedToCustomer(null);
+        asset.setAssignedAt(null);
+        asset.setStatus(AssetStatus.AVAILABLE);
+
+        Asset saved = assetRepository.save(asset);
+
+        auditService.log(
+                "UNASSIGN",
+                "ASSET",
+                saved.getAssetId(),
+                "Unassigned asset (reclaimed)"
+        );
+
+        return toResponse(saved);
+    }
+    @Override
+    public List<AssetAssignment> getAssetHistory(Long assetId) {
+        // validate asset exists
+        assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + assetId));
+        return assetAssignmentRepository.findByAsset_AssetIdOrderByAssignedAtDesc(assetId);
     }
 
     private AssetResponse toResponse(Asset asset) {

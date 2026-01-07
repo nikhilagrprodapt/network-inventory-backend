@@ -12,5 +12,6 @@ public class TopologyFDHNode {
     private String name;
     private String region;
     private String location;
+
     private List<TopologySplitterNode> splitters;
 }

@@ -1,9 +1,9 @@
 package com.company.network_inventory.entity.enums;
 
 public enum TaskStatus {
-    PENDING,
+    OPEN,
     ASSIGNED,
     IN_PROGRESS,
-    COMPLETED,
+    DONE,
     CANCELLED
 }

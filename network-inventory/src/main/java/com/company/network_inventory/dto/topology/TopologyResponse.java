@@ -11,5 +11,6 @@ public class TopologyResponse {
     private Long headendId;
     private String headendName;
     private String headendLocation;
+
     private List<TopologyFDHNode> fdhs;
 }

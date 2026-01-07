@@ -1,9 +1,12 @@
 package com.company.network_inventory.controller;
 
 import com.company.network_inventory.dto.topology.TopologyResponse;
+import com.company.network_inventory.entity.Headend;
 import com.company.network_inventory.service.TopologyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/topology")
@@ -12,7 +15,13 @@ public class TopologyController {
 
     private final TopologyService topologyService;
 
-    // Example: /api/topology?headendId=1
+    // Dropdown roots
+    @GetMapping("/headends")
+    public List<Headend> listHeadends() {
+        return topologyService.listHeadends();
+    }
+
+    // Existing: /api/topology?headendId=1
     @GetMapping
     public TopologyResponse getTopology(@RequestParam Long headendId) {
         return topologyService.getTopology(headendId);

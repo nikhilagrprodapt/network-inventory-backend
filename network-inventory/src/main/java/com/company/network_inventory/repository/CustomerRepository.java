@@ -14,6 +14,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     List<Customer> findBySplitter_SplitterId(Long splitterId);
 
-    boolean existsBySplitter_SplitterIdAndSplitterPortAndCustomerIdNot(Long splitterId, Integer splitterPort, Long customerId);
-
+    boolean existsBySplitter_SplitterIdAndSplitterPortAndCustomerIdNot(
+            Long splitterId,
+            Integer splitterPort,
+            Long customerId
+    );
 }

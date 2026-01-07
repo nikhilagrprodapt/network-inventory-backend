@@ -2,10 +2,15 @@ package com.company.network_inventory.dto.task;
 
 import com.company.network_inventory.entity.enums.TaskStatus;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TaskStatusUpdateRequest {
-    @NotNull
+
+    @NotNull(message = "status is required")
     private TaskStatus status;
 }

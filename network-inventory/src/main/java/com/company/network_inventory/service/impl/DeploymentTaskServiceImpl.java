@@ -30,6 +30,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     @Override
     @Transactional
     public TaskResponse create(TaskCreateRequest request) {
+
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + request.getCustomerId()));
 
@@ -42,9 +43,9 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         DeploymentTask task = DeploymentTask.builder()
                 .customer(customer)
                 .technician(tech)
-                .taskType(request.getTaskType()) // IMPORTANT
+                .taskType(request.getTaskType())
                 .notes(request.getNotes())
-                .status(tech == null ? TaskStatus.PENDING : TaskStatus.ASSIGNED)
+                .status(TaskStatus.OPEN)
                 .scheduledAt(LocalDateTime.now())
                 .build();
 
@@ -54,6 +55,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     @Override
     @Transactional
     public TaskResponse assignTechnician(Long taskId, TaskAssignRequest request) {
+
         DeploymentTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found: " + taskId));
 
@@ -61,14 +63,15 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .orElseThrow(() -> new RuntimeException("Technician not found: " + request.getTechnicianId()));
 
         task.setTechnician(tech);
-        if (task.getStatus() == TaskStatus.PENDING) task.setStatus(TaskStatus.ASSIGNED);
 
+        // keep status OPEN (assignment is not start)
         return toResponse(taskRepository.save(task));
     }
 
     @Override
     @Transactional
     public TaskResponse updateStatus(Long taskId, TaskStatusUpdateRequest request) {
+
         DeploymentTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found: " + taskId));
 
@@ -78,12 +81,29 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         if (newStatus == TaskStatus.IN_PROGRESS && task.getStartedAt() == null) {
             task.setStartedAt(LocalDateTime.now());
         }
-        if (newStatus == TaskStatus.COMPLETED && task.getCompletedAt() == null) {
+        if (newStatus == TaskStatus.DONE && task.getCompletedAt() == null) {
             task.setCompletedAt(LocalDateTime.now());
         }
-
         return toResponse(taskRepository.save(task));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskResponse getOne(Long taskId) {
+        DeploymentTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found: " + taskId));
+        return toResponse(task);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long taskId) {
+        if (!taskRepository.existsById(taskId)) {
+            throw new RuntimeException("Task not found: " + taskId);
+        }
+        taskRepository.deleteById(taskId);
+    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -125,13 +145,12 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .customerName(customerName)
                 .technicianId(techId)
                 .technicianName(techName)
-                .taskType(t.getTaskType() == null ? "UNKNOWN" : t.getTaskType())
-                .status(t.getStatus() == null ? TaskStatus.PENDING : t.getStatus())
+                .taskType(t.getTaskType())
+                .status(t.getStatus() == null ? TaskStatus.OPEN : t.getStatus())
                 .scheduledAt(t.getScheduledAt())
                 .startedAt(t.getStartedAt())
                 .completedAt(t.getCompletedAt())
                 .notes(t.getNotes())
                 .build();
     }
-
 }

@@ -1,10 +1,15 @@
 package com.company.network_inventory.dto.task;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TaskAssignRequest {
-    @NotNull
+
+    @NotNull(message = "technicianId is required")
     private Long technicianId;
 }
