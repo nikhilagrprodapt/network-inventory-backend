@@ -3,6 +3,7 @@ package com.company.network_inventory.controller;
 import com.company.network_inventory.dto.SplitterCreateRequest;
 import com.company.network_inventory.dto.SplitterResponse;
 import com.company.network_inventory.service.SplitterService;
+import com.company.network_inventory.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,12 +18,12 @@ public class SplitterController {
     private final SplitterService splitterService;
 
     @PostMapping
-    public SplitterResponse create(@Valid @RequestBody SplitterCreateRequest request) {
-        return splitterService.create(request);
+    public ApiResponse<SplitterResponse> create(@Valid @RequestBody SplitterCreateRequest request) {
+        return ApiResponse.ok("Splitter created", splitterService.create(request));
     }
 
     @GetMapping
-    public List<SplitterResponse> getAll() {
-        return splitterService.getAll();
+    public ApiResponse<List<SplitterResponse>> all() {
+        return ApiResponse.ok("Splitters fetched", splitterService.getAll());
     }
 }

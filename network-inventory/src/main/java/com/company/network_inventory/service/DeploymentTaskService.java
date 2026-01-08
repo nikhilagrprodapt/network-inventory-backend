@@ -1,9 +1,6 @@
 package com.company.network_inventory.service;
 
-import com.company.network_inventory.dto.task.TaskAssignRequest;
-import com.company.network_inventory.dto.task.TaskCreateRequest;
-import com.company.network_inventory.dto.task.TaskResponse;
-import com.company.network_inventory.dto.task.TaskStatusUpdateRequest;
+import com.company.network_inventory.dto.task.*;
 
 import java.util.List;
 
@@ -24,4 +21,12 @@ public interface DeploymentTaskService {
     List<TaskResponse> getByCustomer(Long customerId);
 
     List<TaskResponse> getByTechnician(Long technicianId);
+
+    TaskDetailResponse getDetail(Long taskId);
+
+    TaskNoteResponse addNote(Long taskId, TaskNoteCreateRequest request);
+
+    TaskChecklistItemResponse addChecklistItem(Long taskId, TaskChecklistCreateRequest request);
+
+    TaskChecklistItemResponse toggleChecklist(Long itemId, TaskChecklistToggleRequest request);
 }

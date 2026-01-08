@@ -28,8 +28,9 @@ public class DeploymentTask {
     private String taskType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskStatus status;
+    @Column(name = "status", nullable = false, length = 32)
+    private TaskStatus status = TaskStatus.OPEN;
+
 
     private LocalDateTime scheduledAt;
     private LocalDateTime startedAt;

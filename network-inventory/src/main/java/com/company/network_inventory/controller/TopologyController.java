@@ -3,6 +3,7 @@ package com.company.network_inventory.controller;
 import com.company.network_inventory.dto.topology.TopologyResponse;
 import com.company.network_inventory.entity.Headend;
 import com.company.network_inventory.service.TopologyService;
+import com.company.network_inventory.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,15 +16,14 @@ public class TopologyController {
 
     private final TopologyService topologyService;
 
-    // Dropdown roots
     @GetMapping("/headends")
-    public List<Headend> listHeadends() {
-        return topologyService.listHeadends();
+    public ApiResponse<List<Headend>> headends() {
+        return ApiResponse.ok("Headends fetched", topologyService.listHeadends());
     }
 
-    // Existing: /api/topology?headendId=1
+    // ✅ requires headendId because service requires it
     @GetMapping
-    public TopologyResponse getTopology(@RequestParam Long headendId) {
-        return topologyService.getTopology(headendId);
+    public ApiResponse<TopologyResponse> topology(@RequestParam Long headendId) {
+        return ApiResponse.ok("Topology fetched", topologyService.getTopology(headendId));
     }
 }
