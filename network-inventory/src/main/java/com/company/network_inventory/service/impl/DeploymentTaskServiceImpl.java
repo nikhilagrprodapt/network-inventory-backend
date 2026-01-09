@@ -1,5 +1,6 @@
 package com.company.network_inventory.service.impl;
 
+import com.company.network_inventory.audit.service.AuditService;
 import com.company.network_inventory.dto.task.*;
 import com.company.network_inventory.entity.Customer;
 import com.company.network_inventory.entity.DeploymentTask;
@@ -30,6 +31,9 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     private final TaskNoteRepository taskNoteRepository;
     private final TaskChecklistItemRepository taskChecklistItemRepository;
 
+    // ✅ Step C: audit
+    private final AuditService auditService;
+
     @Override
     @Transactional
     public TaskResponse create(TaskCreateRequest request) {
@@ -52,7 +56,16 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .scheduledAt(LocalDateTime.now())
                 .build();
 
-        return toResponse(taskRepository.save(task));
+        DeploymentTask saved = taskRepository.save(task);
+
+        auditService.log(
+                "TASK_CREATED",
+                "TASK",
+                saved.getTaskId(),
+                "Created taskType=" + safe(saved.getTaskType()) + ", status=" + saved.getStatus()
+        );
+
+        return toResponse(saved);
     }
 
     @Override
@@ -62,10 +75,28 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         DeploymentTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found: " + taskId));
 
-        // allow unassign if technicianId is null
+        TaskStatus beforeStatus = task.getStatus() == null ? TaskStatus.OPEN : task.getStatus();
+        Long beforeTechId = task.getTechnician() != null ? task.getTechnician().getTechnicianId() : null;
+
+        // ✅ allow unassign
         if (request.getTechnicianId() == null) {
             task.setTechnician(null);
-            return toResponse(taskRepository.save(task));
+
+            // if task wasn't started, go back to OPEN
+            if (beforeStatus == TaskStatus.ASSIGNED) {
+                task.setStatus(TaskStatus.OPEN);
+            }
+
+            DeploymentTask saved = taskRepository.save(task);
+
+            auditService.log(
+                    "TASK_UNASSIGNED",
+                    "TASK",
+                    saved.getTaskId(),
+                    "technicianId " + beforeTechId + " -> null, status=" + beforeStatus + " -> " + saved.getStatus()
+            );
+
+            return toResponse(saved);
         }
 
         Technician tech = technicianRepository.findById(request.getTechnicianId())
@@ -73,8 +104,21 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         task.setTechnician(tech);
 
-        // keep status OPEN/whatever it is (assignment is not start)
-        return toResponse(taskRepository.save(task));
+        // ✅ if task is OPEN and technician assigned, mark ASSIGNED (still "PENDING" in UI)
+        if (beforeStatus == TaskStatus.OPEN) {
+            task.setStatus(TaskStatus.ASSIGNED);
+        }
+
+        DeploymentTask saved = taskRepository.save(task);
+
+        auditService.log(
+                "TASK_ASSIGNED",
+                "TASK",
+                saved.getTaskId(),
+                "technicianId " + beforeTechId + " -> " + tech.getTechnicianId() + ", status=" + beforeStatus + " -> " + saved.getStatus()
+        );
+
+        return toResponse(saved);
     }
 
     @Override
@@ -91,11 +135,25 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         TaskStatus current = task.getStatus() == null ? TaskStatus.OPEN : task.getStatus();
         TaskStatus next = request.getStatus();
 
-        // validate strict transitions
-        validateTransition(current, next);
+        // ✅ Step C: strict transitions (Journey)
+        validateTransitionStrict(current, next);
+
+        // ✅ Step C: checklist enforcement before DONE
+        if (next == TaskStatus.DONE) {
+            List<TaskChecklistItem> items = taskChecklistItemRepository.findByTaskTaskIdOrderByItemIdAsc(taskId);
+
+            if (items == null || items.isEmpty()) {
+                throw new IllegalArgumentException("Cannot complete task: checklist is empty. Add checklist items first.");
+            }
+
+            boolean hasIncomplete = items.stream().anyMatch(it -> !it.isDone());
+            if (hasIncomplete) {
+                throw new IllegalArgumentException("Cannot complete task: please complete all checklist items first.");
+            }
+        }
 
         // timeline updates
-        if ((next == TaskStatus.IN_PROGRESS || next == TaskStatus.BLOCKED) && task.getStartedAt() == null) {
+        if (next == TaskStatus.IN_PROGRESS && task.getStartedAt() == null) {
             task.setStartedAt(LocalDateTime.now());
         }
 
@@ -104,14 +162,18 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
             if (task.getCompletedAt() == null) task.setCompletedAt(LocalDateTime.now());
         }
 
-        // if moving away from DONE (not allowed anyway) keep clean
-        if (current == TaskStatus.DONE && next != TaskStatus.DONE) {
-            throw new IllegalArgumentException("Invalid status transition: " + current + " -> " + next);
-        }
-
         task.setStatus(next);
 
-        return toResponse(taskRepository.save(task));
+        DeploymentTask saved = taskRepository.save(task);
+
+        auditService.log(
+                "TASK_STATUS_CHANGED",
+                "TASK",
+                saved.getTaskId(),
+                "status " + current + " -> " + next
+        );
+
+        return toResponse(saved);
     }
 
     @Override
@@ -129,6 +191,8 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
             throw new RuntimeException("Task not found: " + taskId);
         }
         taskRepository.deleteById(taskId);
+
+        auditService.log("TASK_DELETED", "TASK", taskId, "Deleted task");
     }
 
     @Override
@@ -198,6 +262,13 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         TaskNote saved = taskNoteRepository.save(note);
 
+        auditService.log(
+                "TASK_NOTE_ADDED",
+                "TASK",
+                taskId,
+                "noteId=" + saved.getNoteId()
+        );
+
         return TaskNoteResponse.builder()
                 .noteId(saved.getNoteId())
                 .text(saved.getText())
@@ -224,6 +295,13 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         TaskChecklistItem saved = taskChecklistItemRepository.save(item);
 
+        auditService.log(
+                "TASK_CHECKLIST_ITEM_ADDED",
+                "TASK",
+                taskId,
+                "itemId=" + saved.getItemId() + ", label=" + safe(saved.getLabel())
+        );
+
         return TaskChecklistItemResponse.builder()
                 .itemId(saved.getItemId())
                 .label(saved.getLabel())
@@ -237,8 +315,19 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         TaskChecklistItem item = taskChecklistItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Checklist item not found: " + itemId));
 
-        item.setDone(Boolean.TRUE.equals(request.getDone()));
+        boolean next = Boolean.TRUE.equals(request.getDone());
+        item.setDone(next);
+
         TaskChecklistItem saved = taskChecklistItemRepository.save(item);
+
+        Long taskId = (saved.getTask() != null) ? saved.getTask().getTaskId() : null;
+
+        auditService.log(
+                "TASK_CHECKLIST_TOGGLED",
+                "TASK",
+                taskId,
+                "itemId=" + saved.getItemId() + ", done=" + next
+        );
 
         return TaskChecklistItemResponse.builder()
                 .itemId(saved.getItemId())
@@ -282,21 +371,24 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     }
 
     // --------------------
-    // Transition rules
+    // Step C Strict Transition rules
+    // OPEN/ASSIGNED -> IN_PROGRESS -> DONE
     // --------------------
-    private void validateTransition(TaskStatus from, TaskStatus to) {
+    private void validateTransitionStrict(TaskStatus from, TaskStatus to) {
         if (from == null) from = TaskStatus.OPEN;
         if (to == null) throw new IllegalArgumentException("Status is required.");
         if (from == to) return;
 
         boolean ok = switch (from) {
-            case OPEN -> (to == TaskStatus.ASSIGNED || to == TaskStatus.IN_PROGRESS || to == TaskStatus.BLOCKED || to == TaskStatus.CANCELLED);
-            case ASSIGNED -> (to == TaskStatus.IN_PROGRESS || to == TaskStatus.BLOCKED || to == TaskStatus.CANCELLED);
-            case IN_PROGRESS -> (to == TaskStatus.BLOCKED || to == TaskStatus.DONE || to == TaskStatus.CANCELLED);
-            case BLOCKED -> (to == TaskStatus.IN_PROGRESS || to == TaskStatus.CANCELLED);
-            case DONE, CANCELLED -> false;
+            case OPEN, ASSIGNED -> (to == TaskStatus.IN_PROGRESS);
+            case IN_PROGRESS -> (to == TaskStatus.DONE);
+            case DONE, CANCELLED, BLOCKED -> false;
         };
 
         if (!ok) throw new IllegalArgumentException("Invalid status transition: " + from + " -> " + to);
+    }
+
+    private String safe(String s) {
+        return s == null ? "-" : s;
     }
 }
