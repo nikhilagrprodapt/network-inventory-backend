@@ -1,6 +1,5 @@
 package com.company.network_inventory.dto.task;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Getter
@@ -10,6 +9,6 @@ import lombok.*;
 @Builder
 public class TaskAssignRequest {
 
-    @NotNull(message = "technicianId is required")
+    // ✅ allow null (so unassign works)
     private Long technicianId;
 }

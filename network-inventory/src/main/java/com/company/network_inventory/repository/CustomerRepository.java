@@ -19,4 +19,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             Integer splitterPort,
             Long customerId
     );
+
+    // ADD THESE METHODS inside your CustomerRepository interface
+
+    boolean existsBySplitter_SplitterIdAndSplitterPort(Long splitterId, Integer splitterPort);
 }

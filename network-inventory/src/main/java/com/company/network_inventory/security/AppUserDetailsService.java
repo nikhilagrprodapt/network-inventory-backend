@@ -20,12 +20,11 @@ public class AppUserDetailsService implements UserDetailsService {
         AppUser user = appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        List<SimpleGrantedAuthority> authorities =
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
-
-        return User.withUsername(user.getUsername())
+        // IMPORTANT: authority is "ADMIN", "PLANNER", etc (NOT "ROLE_ADMIN")
+        return User.builder()
+                .username(user.getUsername())
                 .password(user.getPasswordHash())
-                .authorities(authorities)
+                .authorities(List.of(new SimpleGrantedAuthority(user.getRole().name())))
                 .build();
     }
 }

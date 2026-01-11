@@ -44,9 +44,11 @@ public class JwtService {
             parse(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("JWT VALIDATION FAILED: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return false;
         }
     }
+
 
     public String getUsername(String token) {
         return parse(token).getBody().getSubject();

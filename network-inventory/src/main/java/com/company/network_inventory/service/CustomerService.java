@@ -2,6 +2,7 @@ package com.company.network_inventory.service;
 
 import com.company.network_inventory.dto.CustomerAssignSplitterRequest;
 import com.company.network_inventory.dto.CustomerCreateRequest;
+import com.company.network_inventory.dto.CustomerDeactivateRequest;
 import com.company.network_inventory.dto.CustomerResponse;
 import com.company.network_inventory.dto.CustomerUpdateRequest;
 
@@ -14,7 +15,8 @@ public interface CustomerService {
     void deleteCustomer(Long customerId);
 
     CustomerResponse assignSplitter(Long customerId, CustomerAssignSplitterRequest request);
-
     CustomerResponse updateCustomer(Long customerId, CustomerUpdateRequest request);
 
+    // ✅ Journey 4
+    CustomerResponse deactivateCustomer(Long customerId, CustomerDeactivateRequest request);
 }

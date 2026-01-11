@@ -1,14 +1,17 @@
 package com.company.network_inventory.controller;
 
 import com.company.network_inventory.dto.AssetAssignRequest;
+import com.company.network_inventory.dto.AssetBulkUploadResult;
 import com.company.network_inventory.dto.AssetCreateRequest;
 import com.company.network_inventory.dto.AssetResponse;
+import com.company.network_inventory.dto.AssetStatusUpdateRequest;
 import com.company.network_inventory.entity.AssetAssignment;
 import com.company.network_inventory.service.AssetService;
 import com.company.network_inventory.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -48,5 +51,22 @@ public class AssetController {
     @GetMapping("/{id}/history")
     public ApiResponse<List<AssetAssignment>> history(@PathVariable Long id) {
         return ApiResponse.ok("Asset history fetched", assetService.getAssetHistory(id));
+    }
+
+    // ✅ NEW: Update asset status (Journey 3)
+    @PatchMapping("/{id}/status")
+    public ApiResponse<AssetResponse> updateStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody AssetStatusUpdateRequest request
+    ) {
+        return ApiResponse.ok("Asset status updated", assetService.updateStatus(id, request));
+    }
+
+    // ✅ NEW: Bulk CSV upload (Journey 3)
+    @PostMapping("/bulk-upload")
+    public ApiResponse<AssetBulkUploadResult> bulkUpload(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ApiResponse.ok("Bulk upload processed", assetService.bulkUploadCsv(file));
     }
 }

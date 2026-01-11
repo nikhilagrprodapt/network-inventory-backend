@@ -58,6 +58,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         DeploymentTask saved = taskRepository.save(task);
 
+        // ✅ existing log
         auditService.log(
                 "TASK_CREATED",
                 "TASK",
@@ -65,8 +66,19 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 "Created taskType=" + safe(saved.getTaskType()) + ", status=" + saved.getStatus()
         );
 
+        // ✅ NEW: if technician is provided during create, log it as an assign event too
+        if (tech != null) {
+            auditService.log(
+                    "TASK_ASSIGNED",
+                    "TASK",
+                    saved.getTaskId(),
+                    "technicianId null -> " + tech.getTechnicianId() + ", status=" + saved.getStatus()
+            );
+        }
+
         return toResponse(saved);
     }
+
 
     @Override
     @Transactional

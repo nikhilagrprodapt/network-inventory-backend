@@ -2,6 +2,8 @@ package com.company.network_inventory.exception.handler;
 
 import com.company.network_inventory.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
@@ -32,7 +36,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
-                        (msg1, msg2) -> msg1  // if duplicate keys, keep first
+                        (msg1, msg2) -> msg1
                 ));
 
         ApiError error = ApiError.builder()
@@ -47,10 +51,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
-        return buildError("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR, request.getRequestURI());
+
+        // ✅ log full stacktrace in backend console
+        log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
+
+        // ✅ return actual error message to client (DEV only friendly)
+        String msg = ex.getMessage();
+        if (msg == null || msg.isBlank()) msg = ex.getClass().getSimpleName();
+
+        return buildError(msg, HttpStatus.INTERNAL_SERVER_ERROR, request.getRequestURI());
     }
 
     private ResponseEntity<ApiError> buildError(String message, HttpStatus status, String path) {

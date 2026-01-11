@@ -1,12 +1,16 @@
 package com.company.network_inventory.service.impl;
 
+import com.company.network_inventory.audit.service.AuditService;
 import com.company.network_inventory.dto.AssetAssignRequest;
+import com.company.network_inventory.dto.AssetBulkUploadResult;
 import com.company.network_inventory.dto.AssetCreateRequest;
 import com.company.network_inventory.dto.AssetResponse;
+import com.company.network_inventory.dto.AssetStatusUpdateRequest;
 import com.company.network_inventory.entity.Asset;
 import com.company.network_inventory.entity.AssetAssignment;
 import com.company.network_inventory.entity.Customer;
 import com.company.network_inventory.entity.enums.AssetStatus;
+import com.company.network_inventory.entity.enums.AssetType;
 import com.company.network_inventory.exception.ResourceNotFoundException;
 import com.company.network_inventory.repository.AssetAssignmentRepository;
 import com.company.network_inventory.repository.AssetRepository;
@@ -15,9 +19,13 @@ import com.company.network_inventory.service.AssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.company.network_inventory.audit.service.AuditService;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,7 +37,6 @@ public class AssetServiceImpl implements AssetService {
     private final CustomerRepository customerRepository;
     private final AuditService auditService;
     private final AssetAssignmentRepository assetAssignmentRepository;
-
 
     @Override
     public AssetResponse createAsset(AssetCreateRequest request) {
@@ -96,17 +103,15 @@ public class AssetServiceImpl implements AssetService {
         return assetRepository.findAll().stream().map(this::toResponse).toList();
     }
 
-
     @Override
     public List<AssetResponse> getAssetsByFilter(String type, String status) {
 
-        com.company.network_inventory.entity.enums.AssetType t = null;
-        com.company.network_inventory.entity.enums.AssetStatus s = null;
+        AssetType t = null;
+        AssetStatus s = null;
 
         try {
             if (type != null && !type.isBlank()) {
-                t = com.company.network_inventory.entity.enums.AssetType
-                        .valueOf(type.trim().toUpperCase(Locale.ROOT));
+                t = AssetType.valueOf(type.trim().toUpperCase(Locale.ROOT));
             }
         } catch (Exception ignored) {
             t = null;
@@ -114,8 +119,7 @@ public class AssetServiceImpl implements AssetService {
 
         try {
             if (status != null && !status.isBlank()) {
-                s = com.company.network_inventory.entity.enums.AssetStatus
-                        .valueOf(status.trim().toUpperCase(Locale.ROOT));
+                s = AssetStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
             }
         } catch (Exception ignored) {
             s = null;
@@ -133,7 +137,6 @@ public class AssetServiceImpl implements AssetService {
 
         return getAllAssets();
     }
-
 
     @Transactional
     @Override
@@ -163,12 +166,169 @@ public class AssetServiceImpl implements AssetService {
 
         return toResponse(saved);
     }
+
     @Override
     public List<AssetAssignment> getAssetHistory(Long assetId) {
-        // validate asset exists
         assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + assetId));
         return assetAssignmentRepository.findByAsset_AssetIdOrderByAssignedAtDesc(assetId);
+    }
+
+    // ✅ Journey 3: Update status
+    @Transactional
+    @Override
+    public AssetResponse updateStatus(Long assetId, AssetStatusUpdateRequest request) {
+
+        Asset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + assetId));
+
+        // If assigned, reject (backend must enforce)
+        boolean hasActiveAssignment = assetAssignmentRepository
+                .findFirstByAsset_AssetIdAndUnassignedAtIsNullOrderByAssignedAtDesc(assetId)
+                .isPresent();
+
+        if (hasActiveAssignment || asset.getAssignedToCustomer() != null || asset.getStatus() == AssetStatus.ASSIGNED) {
+            throw new IllegalArgumentException("Unassign first");
+        }
+
+        AssetStatus old = asset.getStatus();
+        asset.setStatus(request.getStatus());
+
+        Asset saved = assetRepository.save(asset);
+
+        auditService.log(
+                "STATUS_UPDATE",
+                "ASSET",
+                saved.getAssetId(),
+                "Status changed: " + old + " -> " + saved.getStatus()
+        );
+
+        return toResponse(saved);
+    }
+
+    // ✅ Journey 3: Bulk CSV upload
+    @Transactional
+    @Override
+    public AssetBulkUploadResult bulkUploadCsv(MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("CSV file is required");
+        }
+
+        List<AssetBulkUploadResult.Failure> failures = new ArrayList<>();
+        int created = 0;
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
+        )) {
+            String line;
+            int row = 0;
+
+            while ((line = br.readLine()) != null) {
+                row++;
+
+                String raw = line;
+                line = line.trim();
+
+                if (line.isBlank()) continue;
+
+                // Allow header row
+                if (row == 1 && line.toLowerCase(Locale.ROOT).contains("serial")) {
+                    continue;
+                }
+
+                // Expect: type,serialNumber,model,status
+                String[] parts = line.split(",", -1);
+                if (parts.length < 4) {
+                    failures.add(AssetBulkUploadResult.Failure.builder()
+                            .rowNumber(row)
+                            .serialNumber(null)
+                            .reason("Invalid CSV format. Expected 4 columns: type,serialNumber,model,status")
+                            .rawLine(raw)
+                            .build());
+                    continue;
+                }
+
+                String typeStr = parts[0].trim();
+                String serial = parts[1].trim();
+                String model = parts[2].trim();
+                String statusStr = parts[3].trim();
+
+                if (typeStr.isBlank() || serial.isBlank() || statusStr.isBlank()) {
+                    failures.add(AssetBulkUploadResult.Failure.builder()
+                            .rowNumber(row)
+                            .serialNumber(serial.isBlank() ? null : serial)
+                            .reason("type, serialNumber, and status are required")
+                            .rawLine(raw)
+                            .build());
+                    continue;
+                }
+
+                AssetType type;
+                AssetStatus status;
+
+                try {
+                    type = AssetType.valueOf(typeStr.toUpperCase(Locale.ROOT));
+                } catch (Exception ex) {
+                    failures.add(AssetBulkUploadResult.Failure.builder()
+                            .rowNumber(row)
+                            .serialNumber(serial)
+                            .reason("Invalid type: " + typeStr)
+                            .rawLine(raw)
+                            .build());
+                    continue;
+                }
+
+                try {
+                    status = AssetStatus.valueOf(statusStr.toUpperCase(Locale.ROOT));
+                } catch (Exception ex) {
+                    failures.add(AssetBulkUploadResult.Failure.builder()
+                            .rowNumber(row)
+                            .serialNumber(serial)
+                            .reason("Invalid status: " + statusStr)
+                            .rawLine(raw)
+                            .build());
+                    continue;
+                }
+
+                // Prevent duplicates (serial unique)
+                if (assetRepository.existsBySerialNumber(serial)) {
+                    failures.add(AssetBulkUploadResult.Failure.builder()
+                            .rowNumber(row)
+                            .serialNumber(serial)
+                            .reason("Duplicate serialNumber (already exists)")
+                            .rawLine(raw)
+                            .build());
+                    continue;
+                }
+
+                Asset asset = Asset.builder()
+                        .type(type)
+                        .serialNumber(serial)
+                        .model(model.isBlank() ? null : model)
+                        .status(status)
+                        .build();
+
+                Asset saved = assetRepository.save(asset);
+                created++;
+
+                auditService.log(
+                        "CREATE",
+                        "ASSET",
+                        saved.getAssetId(),
+                        "Bulk upload created asset type=" + saved.getType() + ", serial=" + saved.getSerialNumber()
+                );
+            }
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to process CSV: " + e.getMessage());
+        }
+
+        return AssetBulkUploadResult.builder()
+                .createdCount(created)
+                .failedCount(failures.size())
+                .failures(failures)
+                .build();
     }
 
     private AssetResponse toResponse(Asset asset) {

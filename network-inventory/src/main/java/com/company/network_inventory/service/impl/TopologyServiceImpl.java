@@ -1,17 +1,10 @@
 package com.company.network_inventory.service.impl;
 
 import com.company.network_inventory.dto.topology.*;
-import com.company.network_inventory.entity.Customer;
-import com.company.network_inventory.entity.FDH;
-import com.company.network_inventory.entity.FiberDropLine;
-import com.company.network_inventory.entity.Headend;
-import com.company.network_inventory.entity.Splitter;
+import com.company.network_inventory.entity.*;
+import com.company.network_inventory.entity.enums.AssetType;
 import com.company.network_inventory.exception.ResourceNotFoundException;
-import com.company.network_inventory.repository.CustomerRepository;
-import com.company.network_inventory.repository.FDHRepository;
-import com.company.network_inventory.repository.FiberDropLineRepository;
-import com.company.network_inventory.repository.HeadendRepository;
-import com.company.network_inventory.repository.SplitterRepository;
+import com.company.network_inventory.repository.*;
 import com.company.network_inventory.service.TopologyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +19,10 @@ public class TopologyServiceImpl implements TopologyService {
     private final FDHRepository fdhRepository;
     private final SplitterRepository splitterRepository;
     private final CustomerRepository customerRepository;
-
-    // NEW
     private final FiberDropLineRepository fiberDropLineRepository;
+    private final AssetAssignmentRepository assetAssignmentRepository;
+    private final AssetRepository assetRepository;
+
 
     @Override
     public List<Headend> listHeadends() {
@@ -37,24 +31,28 @@ public class TopologyServiceImpl implements TopologyService {
 
     @Override
     public TopologyResponse getTopology(Long headendId) {
+
         Headend headend = headendRepository.findById(headendId)
                 .orElseThrow(() -> new ResourceNotFoundException("Headend not found: " + headendId));
 
         List<FDH> fdhs = fdhRepository.findByHeadend_HeadendId(headendId);
 
         List<TopologyFDHNode> fdhNodes = fdhs.stream().map(fdh -> {
+
             List<Splitter> splitters = splitterRepository.findByFdh_FdhId(fdh.getFdhId());
 
             List<TopologySplitterNode> splitterNodes = splitters.stream().map(splitter -> {
 
-                // Existing: customers directly under splitter (kept, optional)
-                List<Customer> customers = customerRepository.findBySplitter_SplitterId(splitter.getSplitterId());
+                List<Customer> customers =
+                        customerRepository.findBySplitter_SplitterId(splitter.getSplitterId());
+
                 List<TopologyCustomerNode> customerNodes = customers.stream()
                         .map(this::toCustomerNode)
                         .toList();
 
-                // NEW: fiber lines under splitter
-                List<FiberDropLine> lines = fiberDropLineRepository.findByFromSplitter_SplitterId(splitter.getSplitterId());
+                List<FiberDropLine> lines =
+                        fiberDropLineRepository.findByFromSplitter_SplitterId(splitter.getSplitterId());
+
                 List<TopologyFiberDropLineNode> lineNodes = lines.stream()
                         .map(this::toFiberLineNode)
                         .toList();
@@ -64,8 +62,8 @@ public class TopologyServiceImpl implements TopologyService {
                         .name(splitter.getName())
                         .model(splitter.getModel())
                         .portCapacity(splitter.getPortCapacity())
-                        .customers(customerNodes)          // keep for compatibility
-                        .fiberDropLines(lineNodes)         // new structure
+                        .customers(customerNodes)
+                        .fiberDropLines(lineNodes)
                         .build();
             }).toList();
 
@@ -86,6 +84,80 @@ public class TopologyServiceImpl implements TopologyService {
                 .build();
     }
 
+    // =========================================================
+    // ✅ A4 — Customer Node Drill-Down (FINAL)
+    // =========================================================
+    @Override
+    public TopologyCustomerDetailsResponse getCustomerDetails(Long customerId) {
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+
+        Splitter splitter = customer.getSplitter();
+
+        FiberDropLine fiber =
+                fiberDropLineRepository.findByToCustomer_CustomerId(customerId).orElse(null);
+
+        String ontSerial = null;
+        String ontStatus = null;
+        String routerSerial = null;
+        String routerStatus = null;
+
+        // ✅ 1) Preferred: use AssetAssignment (history / active assignments)
+        List<AssetAssignment> assignments =
+                assetAssignmentRepository.findByCustomer_CustomerIdAndUnassignedAtIsNull(customerId);
+
+        if (assignments != null && !assignments.isEmpty()) {
+            for (AssetAssignment aa : assignments) {
+                Asset asset = aa.getAsset();
+                if (asset == null) continue;
+
+                if (asset.getType() == AssetType.ONT) {
+                    ontSerial = asset.getSerialNumber();
+                    ontStatus = asset.getStatus().name();
+                } else if (asset.getType() == AssetType.ROUTER) {
+                    routerSerial = asset.getSerialNumber();
+                    routerStatus = asset.getStatus().name();
+                }
+            }
+        } else {
+            // ✅ 2) Fallback: use Asset.assignedToCustomer (current state)
+            List<Asset> currentAssets = assetRepository.findByAssignedToCustomer_CustomerId(customerId);
+            for (Asset asset : currentAssets) {
+                if (asset == null) continue;
+
+                if (asset.getType() == AssetType.ONT) {
+                    ontSerial = asset.getSerialNumber();
+                    ontStatus = asset.getStatus().name();
+                } else if (asset.getType() == AssetType.ROUTER) {
+                    routerSerial = asset.getSerialNumber();
+                    routerStatus = asset.getStatus().name();
+                }
+            }
+        }
+
+        return TopologyCustomerDetailsResponse.builder()
+                .customerId(customer.getCustomerId())
+                .name(customer.getName())
+                .address(customer.getAddress())
+                .status(customer.getStatus() != null ? customer.getStatus().name() : null)
+                .splitterId(splitter != null ? splitter.getSplitterId() : null)
+                .splitterName(splitter != null ? splitter.getName() : null)
+                .splitterPort(customer.getSplitterPort())
+                .fiberLineId(fiber != null ? fiber.getLineId() : null)
+                .fiberStatus(fiber != null && fiber.getStatus() != null ? fiber.getStatus().name() : null)
+                .fiberLengthMeters(fiber != null ? fiber.getLengthMeters() : null)
+                .ontSerial(ontSerial)
+                .ontStatus(ontStatus)
+                .routerSerial(routerSerial)
+                .routerStatus(routerStatus)
+                .build();
+    }
+
+
+    // =========================================================
+    // helpers
+    // =========================================================
     private TopologyCustomerNode toCustomerNode(Customer c) {
         return TopologyCustomerNode.builder()
                 .customerId(c.getCustomerId())
@@ -98,8 +170,7 @@ public class TopologyServiceImpl implements TopologyService {
     private TopologyFiberDropLineNode toFiberLineNode(FiberDropLine line) {
         TopologyCustomerNode customerNode = null;
         if (line.getToCustomer() != null) {
-            Customer c = line.getToCustomer();
-            customerNode = toCustomerNode(c);
+            customerNode = toCustomerNode(line.getToCustomer());
         }
 
         return TopologyFiberDropLineNode.builder()
