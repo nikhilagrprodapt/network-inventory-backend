@@ -11,6 +11,7 @@ import com.company.network_inventory.repository.SplitterRepository;
 import com.company.network_inventory.service.FiberDropLineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,7 +25,6 @@ public class FiberDropLineServiceImpl implements FiberDropLineService {
 
     @Override
     public FiberDropLineResponse create(FiberDropLineCreateRequest req) {
-
         Splitter splitter = splitterRepository.findById(req.getFromSplitterId())
                 .orElseThrow(() -> new RuntimeException("Splitter not found: " + req.getFromSplitterId()));
 
@@ -39,7 +39,6 @@ public class FiberDropLineServiceImpl implements FiberDropLineService {
                 .build();
 
         FiberDropLine saved = fiberDropLineRepository.save(line);
-
         return toResponse(saved);
     }
 
@@ -49,9 +48,8 @@ public class FiberDropLineServiceImpl implements FiberDropLineService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FiberDropLineResponse> getAll() {
-        // If your relationships are LAZY, this still works because we are inside service transaction scope
-        // If you ever get LazyInitializationException, I’ll give you the @EntityGraph fix.
         return fiberDropLineRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();

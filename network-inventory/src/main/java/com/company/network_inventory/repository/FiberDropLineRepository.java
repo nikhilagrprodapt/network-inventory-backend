@@ -11,11 +11,8 @@ public interface FiberDropLineRepository extends JpaRepository<FiberDropLine, Lo
 
     long countByStatus(FiberLineStatus status);
 
-    // Splitter -> FiberDropLine (uses FiberDropLine.fromSplitter)
     List<FiberDropLine> findByFromSplitter_SplitterId(Long splitterId);
 
-    // ✅ Journey 4: find fiber assigned to customer
+    // ✅ ADD THIS (required by TopologyServiceImpl)
     Optional<FiberDropLine> findByToCustomer_CustomerId(Long customerId);
-
-
 }
