@@ -5,7 +5,12 @@ import java.util.List;
 
 public interface TechnicianService {
     TechnicianResponse create(TechnicianCreateRequest request);
+
     List<TechnicianResponse> getAll();
+
+    TechnicianResponse getOne(Long id);
+
     TechnicianResponse update(Long id, TechnicianUpdateRequest request);
+
     TechnicianResponse updateStatus(Long id, TechnicianStatusRequest request);
 }

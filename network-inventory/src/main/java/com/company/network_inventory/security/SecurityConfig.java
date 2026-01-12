@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -12,9 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -40,11 +40,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/audit/recent")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER")
 
+                        // ✅ (Optional but recommended) allow MANAGER to POST audit logs too
+                        // This fixes your console 403 for /api/audit/log when manager uses the app.
+                        // If you want ONLY admin to log, remove this block.
+                        .requestMatchers(HttpMethod.POST, "/api/audit/log")
+                        .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER")
+
                         // ✅ UJ6: Admin-only
                         .requestMatchers("/api/admin/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
                         // ✅ Everything else under /api/audit is UJ6 -> Admin only
+                        // (search/details/export etc.)
                         .requestMatchers("/api/audit/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 

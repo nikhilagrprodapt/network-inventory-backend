@@ -50,7 +50,6 @@ public class TechnicianServiceImpl implements TechnicianService {
                 .email(clean(request.getEmail()))
                 .status(normalizeStatus(request.getStatus()))
                 .build();
-
         return toResponse(technicianRepository.save(t));
     }
 
@@ -63,7 +62,7 @@ public class TechnicianServiceImpl implements TechnicianService {
                 .toList();
     }
 
-
+    @Override
     @Transactional(readOnly = true)
     public TechnicianResponse getOne(Long id) {
         Technician t = technicianRepository.findById(id)
@@ -94,7 +93,6 @@ public class TechnicianServiceImpl implements TechnicianService {
     public TechnicianResponse updateStatus(Long id, TechnicianStatusRequest request) {
         Technician t = technicianRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Technician not found: " + id));
-
         t.setStatus(normalizeStatus(request.getStatus()));
         return toResponse(technicianRepository.save(t));
     }

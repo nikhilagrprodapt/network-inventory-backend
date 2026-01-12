@@ -25,6 +25,12 @@ public class TechnicianController {
         return technicianService.getAll();
     }
 
+    // ✅ FIX: frontend needs this for Edit page
+    @GetMapping("/{id}")
+    public TechnicianResponse getOne(@PathVariable Long id) {
+        return technicianService.getOne(id);
+    }
+
     @PatchMapping("/{id}")
     public TechnicianResponse update(@PathVariable Long id,
                                      @Valid @RequestBody TechnicianUpdateRequest request) {
@@ -36,6 +42,4 @@ public class TechnicianController {
                                            @Valid @RequestBody TechnicianStatusRequest request) {
         return technicianService.updateStatus(id, request);
     }
-
-
 }
