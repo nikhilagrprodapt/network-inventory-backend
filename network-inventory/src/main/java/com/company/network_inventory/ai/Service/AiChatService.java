@@ -72,8 +72,8 @@ public class AiChatService {
             Map<?, ?> first = (Map<?, ?>) choices.get(0);
             Map<?, ?> message = (Map<?, ?>) first.get("message");
             return message.get("content").toString();
-        } catch (Exception e) {
-            return "{}";
-        }
+        }  catch (Exception e) {
+        return "AI error: failed to parse response.";
     }
+}
 }
