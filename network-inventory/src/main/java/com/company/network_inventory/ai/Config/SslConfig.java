@@ -1,10 +1,12 @@
 package com.company.network_inventory.ai.Config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 
+@Profile("local")
 @Configuration
 public class SslConfig {
 

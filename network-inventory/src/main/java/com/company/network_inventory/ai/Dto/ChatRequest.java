@@ -3,6 +3,10 @@ package com.company.network_inventory.ai.Dto;
 public class ChatRequest {
     private String message;
 
+    public ChatRequest() {
+        // required for JSON deserialization
+    }
+
     public ChatRequest(String message) {
         this.message = message;
     }
@@ -22,4 +26,3 @@ public class ChatRequest {
                 ']';
     }
 }
-
