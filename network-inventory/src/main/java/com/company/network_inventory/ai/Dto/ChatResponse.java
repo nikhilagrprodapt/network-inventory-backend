@@ -1,0 +1,17 @@
+package com.company.network_inventory.ai.Dto;
+
+public class ChatResponse {
+
+    private String reply;
+
+    public ChatResponse() {
+    }
+
+    public String getReply() {
+        return reply;
+    }
+
+    public void setReply(String reply) {
+        this.reply = reply;
+    }
+}
