@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 
-
-
 @Service
 public class AiChatService {
     private String url="https://api.groq.com/openai/v1/chat/completions";
@@ -75,5 +73,5 @@ public class AiChatService {
         }  catch (Exception e) {
         return "AI error: failed to parse response.";
     }
-}
+  }
 }
