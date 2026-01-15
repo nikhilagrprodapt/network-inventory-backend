@@ -2,15 +2,19 @@ package com.company.network_inventory.service.impl;
 
 import com.company.network_inventory.dto.SplitterCreateRequest;
 import com.company.network_inventory.dto.SplitterResponse;
+import com.company.network_inventory.entity.Customer;
 import com.company.network_inventory.entity.FDH;
 import com.company.network_inventory.entity.Splitter;
 import com.company.network_inventory.exception.ResourceNotFoundException;
+import com.company.network_inventory.repository.CustomerRepository;
 import com.company.network_inventory.repository.FDHRepository;
 import com.company.network_inventory.repository.SplitterRepository;
 import com.company.network_inventory.service.SplitterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.List;
 
 @Service
@@ -19,6 +23,9 @@ public class SplitterServiceImpl implements SplitterService {
 
     private final SplitterRepository splitterRepository;
     private final FDHRepository fdhRepository;
+
+    // ✅ NEW (required for used ports calculation)
+    private final CustomerRepository customerRepository;
 
     @Override
     public SplitterResponse create(SplitterCreateRequest request) {
@@ -56,5 +63,30 @@ public class SplitterServiceImpl implements SplitterService {
                         .build()
                 )
                 .toList();
+    }
+
+    // ✅ NEW: list free ports 1..portCapacity excluding ports used by customers
+    @Override
+    public List<Integer> getAvailablePorts(Long splitterId) {
+
+        Splitter splitter = splitterRepository.findById(splitterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Splitter not found: " + splitterId));
+
+        int total = splitter.getPortCapacity() == null ? 0 : splitter.getPortCapacity();
+        if (total <= 0) return List.of();
+
+        List<Customer> customers = customerRepository.findBySplitter_SplitterId(splitterId);
+
+        Set<Integer> used = customers.stream()
+                .map(Customer::getSplitterPort)
+                .filter(p -> p != null && p > 0)
+                .collect(Collectors.toSet());
+
+        List<Integer> free = new ArrayList<>();
+        for (int p = 1; p <= total; p++) {
+            if (!used.contains(p)) free.add(p);
+        }
+
+        return free;
     }
 }
