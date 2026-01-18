@@ -23,7 +23,7 @@ public class OnboardingConfirmRequest {
     private String plan;
 
     @NotBlank
-    private String connectionType; // "WIRED"/"WIRELESS" (string to avoid enum mismatch)
+    private String connectionType;
 
     // Network selection
     @NotNull
@@ -44,9 +44,9 @@ public class OnboardingConfirmRequest {
 
     // Task
     @NotBlank
-    private String taskType; // e.g. "Install at House B1.2"
+    private String taskType;
 
     // Optional
-    private Long technicianId; // optional: allow null
-    private String notes;      // optional
+    private Long technicianId;
+    private String notes;
 }

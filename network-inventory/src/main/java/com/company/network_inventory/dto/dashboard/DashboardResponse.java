@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 public class DashboardResponse {
 
-    // counts
     private long customers;
     private long activeCustomers;
     private long pendingCustomers;
@@ -25,7 +24,6 @@ public class DashboardResponse {
     private long activeFiberLines;
     private long disconnectedFiberLines;
 
-    // recent tables
     private List<CustomerResponse> recentCustomers;
     private List<AuditLog> recentAuditLogs;
 }

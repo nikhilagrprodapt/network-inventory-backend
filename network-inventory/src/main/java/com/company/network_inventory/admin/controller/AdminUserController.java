@@ -20,7 +20,7 @@ public class AdminUserController {
 
     private final AppUserRepository appUserRepository;
 
-    // ✅ GET /api/admin/users
+    // GET /api/admin/users
     @GetMapping
     public ApiResponse<List<AdminUserDto>> allUsers() {
         List<AppUser> users = appUserRepository.findAll();
@@ -37,7 +37,7 @@ public class AdminUserController {
         return ApiResponse.ok("Users", dto);
     }
 
-    // ✅ PUT /api/admin/users/{id}/role  (ADMIN only)
+    //  PUT /api/admin/users/{id}/role  (ADMIN only)
     @PutMapping("/{id}/role")
     public ApiResponse<AdminUserDto> updateRole(@PathVariable("id") Long id,
                                                 @Valid @RequestBody UpdateUserRoleRequest req) {

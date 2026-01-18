@@ -14,5 +14,5 @@ public class TechnicianCreateRequest {
     private String email;
 
     @NotBlank
-    private String status; // ACTIVE / INACTIVE
+    private String status;
 }

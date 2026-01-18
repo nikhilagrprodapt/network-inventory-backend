@@ -32,7 +32,6 @@ public class AuditController {
         return ApiResponse.ok("Recent audit logs", logs);
     }
 
-    // ✅ NEW: Search (UJ6)
     // Example: /api/audit/search?actor=admin&action=ASSIGN&entityType=ONT&days=7
     @GetMapping("/search")
     public ApiResponse<List<AuditLog>> search(
@@ -55,7 +54,6 @@ public class AuditController {
         return ApiResponse.ok("Audit search results", logs);
     }
 
-    // ✅ NEW: Get full context (UJ6)
     @GetMapping("/{id}")
     public ApiResponse<AuditLog> getById(@PathVariable("id") Long id) {
         AuditLog log = auditLogRepository.findById(id)
@@ -63,8 +61,6 @@ public class AuditController {
         return ApiResponse.ok("Audit log", log);
     }
 
-    // ✅ NEW: Export CSV (UJ6)
-    // /api/audit/export.csv?actor=&action=&entityType=&days=7
     @GetMapping(value = "/export.csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportCsv(
             @RequestParam(value = "actor", required = false) String actor,
@@ -107,7 +103,6 @@ public class AuditController {
                 .body(bytes);
     }
 
-    // ✅ Existing: Log audit event (Journey 5 Step 7)
     @PostMapping("/log")
     public ApiResponse<AuditLog> log(@Valid @RequestBody AuditLogRequest req,
                                      @RequestHeader(value = "X-Request-Id", required = false) String requestId) {

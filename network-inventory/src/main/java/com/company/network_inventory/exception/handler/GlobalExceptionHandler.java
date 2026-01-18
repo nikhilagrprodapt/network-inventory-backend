@@ -54,10 +54,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
 
-        // ✅ log full stacktrace in backend console
         log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
 
-        // ✅ return actual error message to client (DEV only friendly)
         String msg = ex.getMessage();
         if (msg == null || msg.isBlank()) msg = ex.getClass().getSimpleName();
 

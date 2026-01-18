@@ -27,7 +27,6 @@ public class SplitterController {
         return ApiResponse.ok("Splitters fetched", splitterService.getAll());
     }
 
-    // ✅ NEW: available ports for dropdown
     @GetMapping("/{id}/available-ports")
     public ApiResponse<List<Integer>> availablePorts(@PathVariable Long id) {
         return ApiResponse.ok("Available ports fetched", splitterService.getAvailablePorts(id));

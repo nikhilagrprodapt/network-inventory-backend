@@ -13,7 +13,6 @@ public class RequestContextInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        // Optional: user can pass actor name from Postman header: X-Actor: Nikhil
         String actor = request.getHeader("X-Actor");
         if (actor == null || actor.isBlank()) actor = "SYSTEM";
 

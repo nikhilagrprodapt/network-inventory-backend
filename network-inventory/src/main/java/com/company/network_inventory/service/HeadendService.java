@@ -9,9 +9,7 @@ public interface HeadendService {
     HeadendResponse create(HeadendCreateRequest request);
     List<HeadendResponse> getAll();
 
-    // ✅ NEW
     HeadendResponse getOne(Long id);
 
-    // ✅ NEW
     HeadendResponse update(Long id, HeadendCreateRequest request);
 }

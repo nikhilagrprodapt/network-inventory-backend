@@ -36,7 +36,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.username(), request.password())
             );
         } catch (BadCredentialsException ex) {
-            // ✅ should be 401 not 500
+
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication failed");
@@ -49,10 +49,7 @@ public class AuthController {
         return new LoginResponse(token, user.getUsername(), user.getRole().name());
     }
 
-    /**
-     * ✅ Round-1 Bootstrap: create first admin user
-     * Remove or lock down in Round-2.
-     */
+
     @PostMapping("/bootstrap")
     public String bootstrap(@RequestBody BootstrapRequest req) {
         if (appUserRepository.findByUsername(req.username()).isPresent()) {

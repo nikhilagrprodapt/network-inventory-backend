@@ -26,7 +26,7 @@ public class TaskNote {
     private String text;
 
     @Column(length = 200)
-    private String author; // for now, passed from frontend (since no auth)
+    private String author;
 
     private LocalDateTime createdAt;
 

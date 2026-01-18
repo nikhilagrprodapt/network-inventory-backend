@@ -9,6 +9,5 @@ import lombok.*;
 @Builder
 public class TaskAssignRequest {
 
-    // ✅ allow null (so unassign works)
     private Long technicianId;
 }

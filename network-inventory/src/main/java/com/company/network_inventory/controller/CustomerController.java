@@ -42,7 +42,6 @@ public class CustomerController {
         return ApiResponse.ok("Splitter assigned", customerService.assignSplitter(id, request));
     }
 
-    // ✅ Journey 4: Deactivate
     @PostMapping("/{id}/deactivate")
     public ApiResponse deactivate(@PathVariable Long id, @Valid @RequestBody CustomerDeactivateRequest request) {
         return ApiResponse.ok("Customer deactivated", customerService.deactivateCustomer(id, request));

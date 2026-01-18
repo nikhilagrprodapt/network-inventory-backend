@@ -26,21 +26,18 @@ public class TopologyController {
         return ApiResponse.ok("Headends fetched", topologyService.listHeadends());
     }
 
-    // existing (keep)
     @GetMapping
     public ApiResponse<TopologyResponse> topology(@RequestParam Long headendId) {
         auditService.log("TOPOLOGY_VIEW", "HEADEND", headendId, "Viewed topology");
         return ApiResponse.ok("Topology fetched", topologyService.getTopology(headendId));
     }
 
-    // ✅ existing add-on (keep)
     @GetMapping("/{headendId}")
     public ApiResponse<TopologyResponse> topologyByPath(@PathVariable Long headendId) {
         auditService.log("TOPOLOGY_VIEW", "HEADEND", headendId, "Viewed topology");
         return ApiResponse.ok("Topology fetched", topologyService.getTopology(headendId));
     }
 
-    // ✅ NEW: A4 Node Details
     @GetMapping("/customer/{customerId}")
     public ApiResponse<TopologyCustomerDetailsResponse> customerNode(@PathVariable Long customerId) {
         auditService.log("NODE_VIEW", "CUSTOMER", customerId, "Viewed customer node details");

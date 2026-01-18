@@ -39,7 +39,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final SplitterRepository splitterRepository;
     private final AuditService auditService;
 
-    // ✅ Journey 4 dependencies
     private final AssetAssignmentRepository assetAssignmentRepository;
     private final AssetRepository assetRepository;
     private final FiberDropLineRepository fiberDropLineRepository;
@@ -168,7 +167,6 @@ public class CustomerServiceImpl implements CustomerService {
         return toResponse(saved);
     }
 
-    // ✅ Journey 4: Deactivate + reclaim assets + free fiber + close case
     @Transactional
     @Override
     public CustomerResponse deactivateCustomer(Long customerId, CustomerDeactivateRequest request) {

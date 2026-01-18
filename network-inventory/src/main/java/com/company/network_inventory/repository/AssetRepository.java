@@ -9,16 +9,13 @@ import java.util.List;
 
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-    // ✅ Used by AssetServiceImpl (required)
     boolean existsBySerialNumber(String serialNumber);
 
-    // Existing queries
     List<Asset> findByType(AssetType type);
 
     List<Asset> findByStatus(AssetStatus status);
 
     List<Asset> findByTypeAndStatus(AssetType type, AssetStatus status);
 
-    // ✅ Journey 4: find assets currently assigned to a customer
     List<Asset> findByAssignedToCustomer_CustomerId(Long customerId);
 }

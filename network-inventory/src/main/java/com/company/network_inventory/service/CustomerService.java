@@ -17,6 +17,5 @@ public interface CustomerService {
     CustomerResponse assignSplitter(Long customerId, CustomerAssignSplitterRequest request);
     CustomerResponse updateCustomer(Long customerId, CustomerUpdateRequest request);
 
-    // ✅ Journey 4
     CustomerResponse deactivateCustomer(Long customerId, CustomerDeactivateRequest request);
 }

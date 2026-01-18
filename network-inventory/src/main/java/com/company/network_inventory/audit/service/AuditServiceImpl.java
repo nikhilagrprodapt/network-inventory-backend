@@ -19,8 +19,8 @@ public class AuditServiceImpl implements AuditService {
     @Override
     public void log(String action, String entityType, Long entityId, String details) {
 
-        String actor = resolveActor();                 // ✅ always set
-        String requestId = resolveRequestId();         // ✅ always set
+        String actor = resolveActor();
+        String requestId = resolveRequestId();
 
         AuditLog log = AuditLog.builder()
                 .action(action)
@@ -42,12 +42,12 @@ public class AuditServiceImpl implements AuditService {
                 if (!"anonymousUser".equalsIgnoreCase(name)) return name;
             }
         } catch (Exception ignored) {}
-        return "SYSTEM"; // ✅ default since you don’t have auth yet
+        return "SYSTEM"; //
     }
 
     private String resolveRequestId() {
         String rid = MDC.get("requestId");
         if (rid != null && !rid.isBlank()) return rid;
-        return UUID.randomUUID().toString(); // ✅ fallback if filter not applied somehow
+        return UUID.randomUUID().toString();
     }
 }

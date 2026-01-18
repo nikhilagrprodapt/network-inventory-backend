@@ -53,7 +53,6 @@ public class AssetController {
         return ApiResponse.ok("Asset history fetched", assetService.getAssetHistory(id));
     }
 
-    // ✅ NEW: Update asset status (Journey 3)
     @PatchMapping("/{id}/status")
     public ApiResponse<AssetResponse> updateStatus(
             @PathVariable Long id,
@@ -62,7 +61,6 @@ public class AssetController {
         return ApiResponse.ok("Asset status updated", assetService.updateStatus(id, request));
     }
 
-    // ✅ NEW: Bulk CSV upload (Journey 3)
     @PostMapping("/bulk-upload")
     public ApiResponse<AssetBulkUploadResult> bulkUpload(
             @RequestParam("file") MultipartFile file

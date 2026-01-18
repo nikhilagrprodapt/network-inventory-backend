@@ -31,7 +31,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
     private final TaskNoteRepository taskNoteRepository;
     private final TaskChecklistItemRepository taskChecklistItemRepository;
 
-    // ✅ Step C: audit
     private final AuditService auditService;
 
     @Override
@@ -58,7 +57,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         DeploymentTask saved = taskRepository.save(task);
 
-        // ✅ existing log
         auditService.log(
                 "TASK_CREATED",
                 "TASK",
@@ -66,7 +64,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 "Created taskType=" + safe(saved.getTaskType()) + ", status=" + saved.getStatus()
         );
 
-        // ✅ NEW: if technician is provided during create, log it as an assign event too
         if (tech != null) {
             auditService.log(
                     "TASK_ASSIGNED",
@@ -90,7 +87,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         TaskStatus beforeStatus = task.getStatus() == null ? TaskStatus.OPEN : task.getStatus();
         Long beforeTechId = task.getTechnician() != null ? task.getTechnician().getTechnicianId() : null;
 
-        // ✅ allow unassign
         if (request.getTechnicianId() == null) {
             task.setTechnician(null);
 
@@ -116,7 +112,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 
         task.setTechnician(tech);
 
-        // ✅ if task is OPEN and technician assigned, mark ASSIGNED (still "PENDING" in UI)
         if (beforeStatus == TaskStatus.OPEN) {
             task.setStatus(TaskStatus.ASSIGNED);
         }
@@ -147,10 +142,8 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         TaskStatus current = task.getStatus() == null ? TaskStatus.OPEN : task.getStatus();
         TaskStatus next = request.getStatus();
 
-        // ✅ Step C: strict transitions (Journey)
         validateTransitionStrict(current, next);
 
-        // ✅ Step C: checklist enforcement before DONE
         if (next == TaskStatus.DONE) {
             List<TaskChecklistItem> items = taskChecklistItemRepository.findByTaskTaskIdOrderByItemIdAsc(taskId);
 
@@ -348,9 +341,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .build();
     }
 
-    // --------------------
-    // Mapping
-    // --------------------
+
     private TaskResponse toResponse(DeploymentTask t) {
 
         Long customerId = null;
@@ -382,10 +373,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
                 .build();
     }
 
-    // --------------------
-    // Step C Strict Transition rules
-    // OPEN/ASSIGNED -> IN_PROGRESS -> DONE
-    // --------------------
+
     private void validateTransitionStrict(TaskStatus from, TaskStatus to) {
         if (from == null) from = TaskStatus.OPEN;
         if (to == null) throw new IllegalArgumentException("Status is required.");

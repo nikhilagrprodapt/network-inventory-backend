@@ -18,13 +18,13 @@ public class AuditLog {
     private Long id;
 
     @Column(nullable = false)
-    private String actor; // who triggered it (from X-Actor or SYSTEM)
+    private String actor;
 
     @Column(nullable = false)
-    private String action; // CREATE, UPDATE, DELETE, ASSIGN, STATUS_CHANGE
+    private String action;
 
     @Column(nullable = false)
-    private String entityType; // CUSTOMER, SPLITTER, TASK, ASSET, etc.
+    private String entityType;
 
     private Long entityId;
 

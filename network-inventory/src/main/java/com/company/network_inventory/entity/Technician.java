@@ -24,5 +24,5 @@ public class Technician {
     private String email;
 
     @Column(nullable = false)
-    private String status; // ACTIVE, INACTIVE
+    private String status;
 }

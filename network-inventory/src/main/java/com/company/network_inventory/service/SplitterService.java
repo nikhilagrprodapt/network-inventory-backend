@@ -9,6 +9,5 @@ public interface SplitterService {
     SplitterResponse create(SplitterCreateRequest request);
     List<SplitterResponse> getAll();
 
-    // ✅ NEW
     List<Integer> getAvailablePorts(Long splitterId);
 }

@@ -84,9 +84,6 @@ public class TopologyServiceImpl implements TopologyService {
                 .build();
     }
 
-    // =========================================================
-    // ✅ A4 — Customer Node Drill-Down (FINAL)
-    // =========================================================
     @Override
     public TopologyCustomerDetailsResponse getCustomerDetails(Long customerId) {
 
@@ -103,7 +100,6 @@ public class TopologyServiceImpl implements TopologyService {
         String routerSerial = null;
         String routerStatus = null;
 
-        // ✅ 1) Preferred: use AssetAssignment (history / active assignments)
         List<AssetAssignment> assignments =
                 assetAssignmentRepository.findByCustomer_CustomerIdAndUnassignedAtIsNull(customerId);
 
@@ -121,7 +117,7 @@ public class TopologyServiceImpl implements TopologyService {
                 }
             }
         } else {
-            // ✅ 2) Fallback: use Asset.assignedToCustomer (current state)
+
             List<Asset> currentAssets = assetRepository.findByAssignedToCustomer_CustomerId(customerId);
             for (Asset asset : currentAssets) {
                 if (asset == null) continue;
@@ -154,10 +150,6 @@ public class TopologyServiceImpl implements TopologyService {
                 .build();
     }
 
-
-    // =========================================================
-    // helpers
-    // =========================================================
     private TopologyCustomerNode toCustomerNode(Customer c) {
         return TopologyCustomerNode.builder()
                 .customerId(c.getCustomerId())

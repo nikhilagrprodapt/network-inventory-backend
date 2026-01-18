@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 public class TechnicianStatusRequest {
     @NotBlank
-    private String status; // ACTIVE / INACTIVE
+    private String status;
 }

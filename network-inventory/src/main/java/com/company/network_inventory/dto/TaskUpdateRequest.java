@@ -11,7 +11,7 @@ public class TaskUpdateRequest {
     private String title;
     private String description;
     private TaskStatus status;
-    private Long technicianId; // can change / set null
-    private Long customerId;   // can change / set null
+    private Long technicianId;
+    private Long customerId;
     private LocalDateTime dueAt;
 }

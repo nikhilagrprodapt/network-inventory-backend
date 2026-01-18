@@ -26,13 +26,11 @@ public class HeadendController {
         return headendService.getAll();
     }
 
-    // ✅ ADD: get one
     @GetMapping("/{id}")
     public HeadendResponse getOne(@PathVariable Long id) {
         return headendService.getOne(id);
     }
 
-    // ✅ ADD: update (PATCH)
     @PatchMapping("/{id}")
     public HeadendResponse update(@PathVariable Long id,
                                   @Valid @RequestBody HeadendCreateRequest request) {

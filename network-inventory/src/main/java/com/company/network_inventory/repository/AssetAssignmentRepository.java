@@ -14,6 +14,5 @@ public interface AssetAssignmentRepository extends JpaRepository<AssetAssignment
 
     List<AssetAssignment> findByCustomer_CustomerIdAndUnassignedAtIsNull(Long customerId);
 
-    // ✅ for customer-level history endpoint
     List<AssetAssignment> findByCustomer_CustomerIdOrderByAssignedAtDesc(Long customerId);
 }

@@ -11,12 +11,12 @@ import lombok.*;
 public class AuditLogRequest {
 
     @NotBlank
-    private String action;     // e.g. TOPOLOGY_VIEW, TOPOLOGY_EXPORT, NODE_VIEW
+    private String action;
 
     @NotBlank
-    private String entityType; // e.g. HEADEND, FDH, SPLITTER, CUSTOMER
+    private String entityType;
 
-    private Long entityId;     // optional
+    private Long entityId;
 
-    private String details;    // optional
+    private String details;
 }

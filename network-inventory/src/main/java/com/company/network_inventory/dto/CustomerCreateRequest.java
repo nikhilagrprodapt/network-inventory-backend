@@ -24,7 +24,7 @@ public class CustomerCreateRequest {
 
     @NotNull(message = "Status is required")
     private CustomerStatus status;
-    // optional at onboarding time
+
     private Long splitterId;
     private Integer splitterPort;
 

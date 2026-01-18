@@ -17,9 +17,9 @@ public class AssetBulkUploadResult {
     @Data
     @Builder
     public static class Failure {
-        private int rowNumber;       // 1-based row index in CSV file (excluding header logic)
-        private String serialNumber; // if available
-        private String reason;       // why failed
-        private String rawLine;      // original line for debugging
+        private int rowNumber;
+        private String serialNumber;
+        private String reason;
+        private String rawLine;
     }
 }

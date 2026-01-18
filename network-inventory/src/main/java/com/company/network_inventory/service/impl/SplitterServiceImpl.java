@@ -24,7 +24,7 @@ public class SplitterServiceImpl implements SplitterService {
     private final SplitterRepository splitterRepository;
     private final FDHRepository fdhRepository;
 
-    // ✅ NEW (required for used ports calculation)
+    // NEW (required for used ports calculation)
     private final CustomerRepository customerRepository;
 
     @Override
@@ -65,7 +65,7 @@ public class SplitterServiceImpl implements SplitterService {
                 .toList();
     }
 
-    // ✅ NEW: list free ports 1..portCapacity excluding ports used by customers
+    // NEW: list free ports 1..portCapacity excluding ports used by customers
     @Override
     public List<Integer> getAvailablePorts(Long splitterId) {
 

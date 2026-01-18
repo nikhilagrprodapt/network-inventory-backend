@@ -20,7 +20,6 @@ public class AppUserDetailsService implements UserDetailsService {
         AppUser user = appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        // IMPORTANT: authority is "ADMIN", "PLANNER", etc (NOT "ROLE_ADMIN")
         return User.builder()
                 .username(user.getUsername())
                 .password(user.getPasswordHash())

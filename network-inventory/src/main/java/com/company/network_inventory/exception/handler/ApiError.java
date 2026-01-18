@@ -15,6 +15,5 @@ public class ApiError {
     private String message;
     private String path;
 
-    // NEW: field-wise validation errors
     private Map<String, String> fieldErrors;
 }

@@ -25,7 +25,6 @@ public class TechnicianController {
         return technicianService.getAll();
     }
 
-    // ✅ FIX: frontend needs this for Edit page
     @GetMapping("/{id}")
     public TechnicianResponse getOne(@PathVariable Long id) {
         return technicianService.getOne(id);

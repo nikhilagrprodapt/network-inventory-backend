@@ -174,7 +174,6 @@ public class AssetServiceImpl implements AssetService {
         return assetAssignmentRepository.findByAsset_AssetIdOrderByAssignedAtDesc(assetId);
     }
 
-    // ✅ Journey 3: Update status
     @Transactional
     @Override
     public AssetResponse updateStatus(Long assetId, AssetStatusUpdateRequest request) {
@@ -182,7 +181,6 @@ public class AssetServiceImpl implements AssetService {
         Asset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + assetId));
 
-        // If assigned, reject (backend must enforce)
         boolean hasActiveAssignment = assetAssignmentRepository
                 .findFirstByAsset_AssetIdAndUnassignedAtIsNullOrderByAssignedAtDesc(assetId)
                 .isPresent();
@@ -206,7 +204,6 @@ public class AssetServiceImpl implements AssetService {
         return toResponse(saved);
     }
 
-    // ✅ Journey 3: Bulk CSV upload
     @Transactional
     @Override
     public AssetBulkUploadResult bulkUploadCsv(MultipartFile file) {
@@ -237,7 +234,6 @@ public class AssetServiceImpl implements AssetService {
                     continue;
                 }
 
-                // Expect: type,serialNumber,model,status
                 String[] parts = line.split(",", -1);
                 if (parts.length < 4) {
                     failures.add(AssetBulkUploadResult.Failure.builder()

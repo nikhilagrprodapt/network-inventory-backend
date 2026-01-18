@@ -24,7 +24,6 @@ public interface AssetService {
 
     List<AssetAssignment> getAssetHistory(Long assetId);
 
-    // ✅ ADD (Journey 3)
     AssetResponse updateStatus(Long assetId, AssetStatusUpdateRequest request);
 
     AssetBulkUploadResult bulkUploadCsv(MultipartFile file);

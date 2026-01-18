@@ -10,9 +10,7 @@ public interface TopologyService {
 
     TopologyResponse getTopology(Long headendId);
 
-    // dropdown
     List<Headend> listHeadends();
 
-    // ✅ A4 – Node drill-down
     TopologyCustomerDetailsResponse getCustomerDetails(Long customerId);
 }
